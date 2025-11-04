@@ -32,6 +32,7 @@
   <script type="module" defer src="/static/js/ui.js"></script>
   <script type="module" defer src="/static/js/cache.js"></script>
   <script type="module" defer src="/static/js/rfsZarrFetcher.js"></script>
+  <script type="module" defer src="/static/js/biasCorrectedApi.js"></script>
   <script type="module" defer src="/static/js/data.js"></script>
   <script type="module" defer src="/static/js/map.js"></script>
   <script type="module" defer src="/static/js/main.js"></script>
@@ -62,6 +63,24 @@
     </div>
   </div>
 </div>
+<div id="biascorrectionwarning-modal" class="modal">
+  <div class="modal-content" style="display: flex; flex-direction: column; align-items: center">
+    <div class="modal-header-bar">
+      <h4>Enable Bias Corrected Data?</h4>
+      <a class="modal-close waves-effect waves-green btn-flat">X</a>
+    </div>
+    <div style="width: 100%; max-width: 800px">
+      <p>
+        Global bias correction is an experimental feature based on active research and data collection efforts. You might discover unexpected behaviors
+        and incorrect data. These data are not recommended for operational guidance applications. Are you sure you want to use bias corrected data?
+      </p>
+      <div style="display: flex; flex-direction: row; justify-content: center; gap: 10px; margin-top: 15px">
+        <button class="btn red modal-close waves-effect waves-green btn-flat">No, go back</button>
+        <button class="btn green modal-close waves-effect waves-green btn-flat" id="confirm-use-bias-correction">Yes, use bias corrected data</button>
+      </div>
+    </div>
+  </div>
+</div>
 <div id="settings-modal" class="modal">
   <div class="modal-content">
     <div class="modal-header-bar">
@@ -75,13 +94,20 @@
         <span>Display simplified forecast stats</span>
       </label>
     </div>
-<!--    <div class="options-wrapper">-->
-<!--      <label>-->
-<!--        <input type="checkbox" class="filled-in" id="settingsUseBiasCorrected"/>-->
-<!--        <span>Use experimental bias correction</span>-->
-<!--      </label>-->
-<!--    </div>-->
-    <h5>Data and Cache Options</h5>
+    <div class="options-wrapper">
+      <label>
+        <input type="checkbox" class="filled-in" id="settingsShowExtraRetroGraphs" checked/>
+        <span>Show additional plots analyzing retrospective data</span>
+      </label>
+    </div>
+    <h5>Data Options</h5>
+    <div class="options-wrapper">
+      <label>
+        <input type="checkbox" class="filled-in" id="settingsUseBiasCorrected"/>
+        <span>Use experimental bias correction</span>
+      </label>
+    </div>
+    <h5>Browser Cache Options</h5>
     <button class="btn red clear-cache">Clear local cache of downloaded data</button>
     <button class="btn red delete-all-bookmarks">Remove all bookmarked rivers</button>
   </div>
@@ -101,8 +127,12 @@
         <button id="showRetroCharts" class="btn status-btn" onclick="showChartView('retro')">Retro<span class="hide-on-small-only">spective</span><span id="retro-load-icon"></span></button>
         <a class="btn btn-flat waves-effect waves-teal tooltipped dropdown-trigger" data-target="download-select" data-tooltip="Download CSVs"><i class="material-icons">download</i></a>
         <ul id="download-select" class="dropdown-content">
-          <li style="display: flex; justify-content: center"><button class="btn waves-effect waves-light" id="download-forecast-link" disabled>Save Forecast Data (CSV)</button></li>
-          <li style="display: flex; justify-content: center"><button class="btn waves-effect waves-light" id="download-retrospective-link" disabled>Save Retrospective Data (CSV)</button></li>
+          <li style="display: flex; justify-content: center">
+            <button class="btn waves-effect waves-light" id="download-forecast-link" disabled>Save Forecast Data (CSV)</button>
+          </li>
+          <li style="display: flex; justify-content: center">
+            <button class="btn waves-effect waves-light" id="download-retrospective-link" disabled>Save Retrospective Data (CSV)</button>
+          </li>
         </ul>
         <button class="btn modal-close waves-effect waves-red btn-flat">X</button>
       </div>
@@ -125,10 +155,10 @@
           <h4>Enter a River ID or use the map to click on a stream to view data</h4>
         </div>
         <div id="yearlyVolPlot" class="chart"></div>
-          <div id="cumVolume" class="chart"></div>
+        <div id="cumVolume" class="chart"></div>
         <div id="yearlyStatusPlot" class="chart"></div>
         <div id="yearlyPeaksPlot" class="chart"></div>
-        <div id="heatMap" class="chart"></div>
+        <div id="rasterHydrographPlot" class="chart"></div>
         <div id="fdcPlot" class="chart"></div>
       </div>
     </div>
