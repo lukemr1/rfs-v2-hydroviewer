@@ -494,9 +494,7 @@ const plotYearlyPeaks = ({yearlyPeaks, riverId, chartDiv, biasCorrected}) => {
   const formatVal = val => {
     if (val >= 1000) return `${Math.round((val / 1000) * 10) / 10}k`;
     if (val === 0) return "0";
-    const magnitude = Math.floor(Math.log10(Math.abs(val)));
-    const factor = 10 ** (magnitude - 2);
-    return Math.round(val / factor) * factor;
+    return val.toFixed(2);
   };
 
   // --- Circular logic for outlier detection ---
