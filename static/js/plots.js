@@ -761,25 +761,33 @@ const plotCumulativeVolumes = ({retro, riverId, chartDiv}) => {
     .entries(cumulative)
     .map(([year, arr]) => {
       let lineStyle = {color: "lightgray", width: 0.8}
-      let hovertemplate = null
+      let hovertemplate = `${text.words.year}: ${year}<br>` +
+                      `Date: %{x|%b %d}<br>` +
+                      `Volume: %{y:.5s} MCM<extra></extra>`
       let name = year
       let showlegend = false
       let zorder = 0
       if (+year === wettestYear) {
         lineStyle = {color: "blue", width: 2}
-        hovertemplate = `${text.words.year}: ${year} (${text.words.wettestYear})`
+        hovertemplate = `${year} (${text.words.wettestYear})<br>` +
+            `Date: %{x|%b %d}<br>` +
+                    `Volume: %{y:.5s} MCM<extra></extra>`
         name = `${text.words.wettestYear}: ${year}`
         showlegend = true
         zorder = 2
       } else if (+year === driestYear) {
         lineStyle = {color: "red", width: 2}
-        hovertemplate = `${text.words.year}: ${year} (${text.words.driestYear})`
+        hovertemplate = `${year} (${text.words.driestYear})<br>` +
+            `Date: %{x|%b %d}<br>` +
+                    `Volume: %{y:.5s} MCM<extra></extra>`
         name = `${text.words.driestYear}: ${year}`
         showlegend = true
         zorder = 2
       } else if (+year === medianYear) {
         lineStyle = {color: "green", width: 2}
-        hovertemplate = `${text.words.year}: ${year} (${text.words.medianYear})`
+        hovertemplate = `${year} (${text.words.medianYear})<br>` +
+            `Date: %{x|%b %d}<br>` +
+                    `Volume: %{y:.5s} MCM<extra></extra>`
         name = `${text.words.medianYear}: ${year}`
         showlegend = true
         zorder = 2
