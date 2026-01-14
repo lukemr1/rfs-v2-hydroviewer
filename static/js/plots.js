@@ -749,7 +749,10 @@ const plotCumulativeVolumes = ({retro, riverId, chartDiv}) => {
     total: arr.y[arr.y.length - 1]
   }));
 
-  const sortedTotals = [...totals].sort((a, b) => a.total - b.total);
+  const currentYear = new Date().getUTCFullYear();
+  const workingTotals = totals.filter(t => t.year < currentYear)
+
+  const sortedTotals = [...workingTotals].sort((a, b) => a.total - b.total);
   const driestYear = sortedTotals[0].year;
   const wettestYear = sortedTotals[sortedTotals.length - 1].year;
   const medianYear = sortedTotals[Math.floor(sortedTotals.length / 2)].year;
