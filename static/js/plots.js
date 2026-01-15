@@ -1,4 +1,4 @@
-import {divChartFdc, divChartForecast, divChartRetro, divChartStatus, divChartYearlyVol, divCumulativeVolume, divRasterHydrograph, divTableForecast, divYearlyPeaks, lang} from './ui.js'
+import {divChartFdc, divChartForecast, divChartRetro, divChartStatus, divChartYearlyVol, divCumulativeVolume, divRasterHydrograph, divTableForecast, divYearlyPeaks, divCumulativeVolumeForecast, lang} from './ui.js'
 import {UseShowExtraRetroGraphs} from "./states/state.js";
 
 //////////////////////////////////////////////////////////////////////// Constants and configs
@@ -828,7 +828,152 @@ const plotCumulativeVolumes = ({retro, riverId, chartDiv}) => {
   };
   Plotly.newPlot(chartDiv, traces, layout, config);
 };
+const plotCumulativeVolumeForecast = ({retro, riverId, chartDiv}) => {
+  chartDiv.innerHTML = "";
 
+  // 1. DYNAMIC REFERENCE DATE
+  const today = new Date();
+  const refMonth = today.getUTCMonth(); // 0-indexed (Jan=0, matches Python Month 1)
+  const refDay = today.getUTCDate();
+
+  const pastMonths = 9;
+  const futureMonths = 3;
+  const SECONDS_IN_DAY = 86400;
+
+  // 2. STORAGE
+  const pastCurves = {};   // year -> { relativeDay: volumeSum }
+  const futureCurves = {}; // year -> { relativeDay: volumeSum }
+  const futureTotals = {}; // year -> final 3-mo volume
+
+  // 3. DAILY AGGREGATION & RELATIVE DAY MAPPING
+  // Replicates: .groupby("DateDay").sum() and (date - ref_date).dt.days
+  retro.datetime.forEach((date, i) => {
+    const flow = retro.discharge[i];
+    const volume = flow * SECONDS_IN_DAY;
+    const year = date.getUTCFullYear();
+
+    // Check window for current year, previous year, and next year (Handles year-crossing)
+    for (let y = year - 1; y <= year + 1; y++) {
+      const refDate = new Date(Date.UTC(y, refMonth, refDay));
+      const pastStart = new Date(refDate);
+      pastStart.setUTCMonth(pastStart.getUTCMonth() - pastMonths);
+      const futureEnd = new Date(refDate);
+      futureEnd.setUTCMonth(futureEnd.getUTCMonth() + futureMonths);
+
+      const relativeDay = Math.round((date - refDate) / 86400000);
+
+      // Past Window Logic
+      if (date >= pastStart && date < refDate) {
+        if (!pastCurves[y]) pastCurves[y] = {};
+        pastCurves[y][relativeDay] = (pastCurves[y][relativeDay] || 0) + volume;
+      }
+      // Future Window Logic
+      else if (date >= refDate && date <= futureEnd) {
+        if (!futureCurves[y]) futureCurves[y] = {};
+        futureCurves[y][relativeDay] = (futureCurves[y][relativeDay] || 0) + volume;
+      }
+    }
+  });
+
+  // 4. STATISTICAL AGGREGATION
+  const calculateStats = (curvesObj, isFuture) => {
+    const dayData = {};
+    Object.entries(curvesObj).forEach(([year, days]) => {
+      let cumSum = 0;
+      // Sort days to ensure cumulative sum is calculated chronologically
+      const sortedDays = Object.keys(days).sort((a, b) => Number(a) - Number(b));
+      sortedDays.forEach(d => {
+        cumSum += days[d];
+        if (!dayData[d]) dayData[d] = [];
+        dayData[d].push(cumSum);
+      });
+      if (isFuture) futureTotals[year] = cumSum;
+    });
+
+    const daysArr = Object.keys(dayData).sort((a, b) => Number(a) - Number(b));
+    const getP = (q) => daysArr.map(d => {
+      const vals = dayData[d].sort((a, b) => a - b);
+      const idx = (vals.length - 1) * q;
+      const base = Math.floor(idx);
+      const rest = idx - base;
+      return vals[base + 1] !== undefined ? vals[base] + rest * (vals[base + 1] - vals[base]) : vals[base];
+    });
+
+    return { days: daysArr.map(Number), median: getP(0.5), p25: getP(0.25), p75: getP(0.75) };
+  };
+
+  const pastStats = calculateStats(pastCurves, false);
+  const futureStats = calculateStats(futureCurves, true);
+
+  // Replicates: hist_anchor = past_median[-1]
+  const anchor = pastStats.median.length ? pastStats.median[pastStats.median.length - 1] : 0;
+
+  // 5. PICK EXTREMES (Replicates wettest_year and driest_year)
+  const sortedYears = Object.entries(futureTotals).sort((a, b) => a[1] - b[1]);
+  if (sortedYears.length === 0) return; // Error guard
+  const driestY = sortedYears[0][0];
+  const wettestY = sortedYears[sortedYears.length - 1][0];
+
+  // 6. PLOTLY TRACES
+  const traces = [
+  // 1. Past 9-Month Median
+  {
+    x: pastStats.days,
+    y: pastStats.median.map(v => v / 1e6),
+    name: "Past 9-mo Median",
+    mode: "lines",
+    line: { color: "blue", width: 2 }
+  },
+  // 2. Forecast Percentile Envelope
+  {
+    x: [...futureStats.days, ...[...futureStats.days].reverse()],
+    y: [...futureStats.p75.map(v => (v + anchor) / 1e6), ...[...futureStats.p25].reverse().map(v => (v + anchor) / 1e6)],
+    fill: "toself",
+    fillcolor: "rgba(0, 128, 0, 0.2)",
+    line: { color: "transparent" },
+    name: "25–75th Percentile",
+    type: "scatter"
+  },
+  // 3. Forecast Median
+  {
+    x: futureStats.days,
+    y: futureStats.median.map(v => (v + anchor) / 1e6),
+    name: "Forecast Median",
+    mode: "lines",
+    line: { color: "green", width: 3 }
+  },
+  // 4. Wettest Year (Dashed Navy)
+  {
+    x: futureStats.days,
+    y: futureStats.days.map(d => {
+      let sum = 0;
+      const yearDays = futureCurves[wettestY];
+      const days = Object.keys(yearDays).sort((a,b)=>a-b);
+      for(let day of days) { if(day <= d) sum += yearDays[day]; }
+      return (sum + anchor) / 1e6;
+    }),
+    name: `Wettest (${wettestY})`,
+    mode: "lines",
+    line: { dash: "dash", color: "navy", width: 1.5 }
+  },
+  // 5. Driest Year (Dashed Red)
+  {
+    x: futureStats.days,
+    y: futureStats.days.map(d => {
+      let sum = 0;
+      const yearDays = futureCurves[driestY];
+      const days = Object.keys(yearDays).sort((a,b)=>a-b);
+      for(let day of days) { if(day <= d) sum += yearDays[day]; }
+      return (sum + anchor) / 1e6;
+    }),
+    name: `Driest (${driestY})`,
+    mode: "lines",
+    line: { dash: "dash", color: "red", width: 1.5 }
+  }
+];
+
+  Plotly.newPlot(chartDiv, traces, { title: `Cumulative Volume Forecast - ${riverId}`, xaxis: { title: "Relative Days" }, yaxis: { title: "MCM" } });
+};
 //////////////////////////////////////////////////////////////////////// Helper Functions
 const clearCharts = chartTypes => {
   if (chartTypes === "forecast" || chartTypes === null || chartTypes === undefined) {
@@ -836,7 +981,7 @@ const clearCharts = chartTypes => {
       .forEach(el => el.innerHTML = '')
   }
   if (chartTypes === "retro" || chartTypes === null || chartTypes === undefined) {
-    [divChartRetro, divChartYearlyVol, divChartStatus, divChartFdc, divYearlyPeaks, divRasterHydrograph, divCumulativeVolume]
+    [divChartRetro, divChartYearlyVol, divChartStatus, divChartFdc, divYearlyPeaks, divRasterHydrograph, divCumulativeVolume, divCumulativeVolumeForecast]
       .forEach(el => el.innerHTML = '')
   }
 }
@@ -936,6 +1081,7 @@ const plotAllRetro = ({retro, riverId}) => {
     plotYearlyPeaks({yearlyPeaks, riverId, chartDiv: divYearlyPeaks, biasCorrected})
     plotRasterHydrograph({retro, riverId, chartDiv: divRasterHydrograph})
     plotCumulativeVolumes({retro, riverId, chartDiv: divCumulativeVolume})
+    plotCumulativeVolumeForecast({retro, riverId, chartDiv: divCumulativeVolumeForecast})
     plotFdc({fdc, monthlyFdc, riverId, chartDiv: divChartFdc, biasCorrected})
   }
 }
@@ -945,6 +1091,6 @@ const plotAllForecast = ({forecast, rp, riverId, showStats}) => {
 }
 
 //////////////////////////////////////////////////////////////////////// Event Listeners
-window.addEventListener('resize', () => [divChartForecast, divChartRetro, divChartYearlyVol, divYearlyPeaks, divChartStatus, divRasterHydrograph, divCumulativeVolume, divChartFdc].forEach(chart => Plotly.Plots.resize(chart)))
+window.addEventListener('resize', () => [divChartForecast, divChartRetro, divChartYearlyVol, divYearlyPeaks, divChartStatus, divRasterHydrograph, divCumulativeVolume, divCumulativeVolumeForecast, divChartFdc].forEach(chart => Plotly.Plots.resize(chart)))
 
 export {plotAllRetro, plotAllForecast, clearCharts}

@@ -30,6 +30,7 @@ export const divChartFdc = document.getElementById("fdcPlot")
 export const divYearlyPeaks = document.getElementById("yearlyPeaksPlot")
 export const divRasterHydrograph = document.getElementById("rasterHydrographPlot")
 export const divCumulativeVolume = document.getElementById("cumVolume")
+export const divCumulativeVolumeForecast = document.getElementById("cumVolumeForecast")
 
 // Misc constants
 export const lang = window.location.pathname.split("/").filter(x => x && !x.includes(".html") && !x.includes('viewer'))[0] || 'en-US'
