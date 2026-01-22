@@ -763,7 +763,7 @@ const plotCumulativeVolumes = ({retro, riverId, chartDiv}) => {
       let lineStyle = {color: "lightgray", width: 0.8}
       let hovertemplate = `${text.words.year}: ${year}<br>` +
                       `Date: %{x|%b %d}<br>` +
-                      `Volume: %{y:.5s} MCM<extra></extra>`
+                      `Volume: %{y:.5s} Mm³<extra></extra>`
       let name = year
       let showlegend = false
       let zorder = 0
@@ -771,7 +771,7 @@ const plotCumulativeVolumes = ({retro, riverId, chartDiv}) => {
         lineStyle = {color: "blue", width: 2}
         hovertemplate = `${year} (${text.words.wettestYear})<br>` +
             `Date: %{x|%b %d}<br>` +
-                    `Volume: %{y:.5s} MCM<extra></extra>`
+                    `Volume: %{y:.5s} Mm³<extra></extra>`
         name = `${text.words.wettestYear}: ${year}`
         showlegend = true
         zorder = 2
@@ -779,7 +779,7 @@ const plotCumulativeVolumes = ({retro, riverId, chartDiv}) => {
         lineStyle = {color: "red", width: 2}
         hovertemplate = `${year} (${text.words.driestYear})<br>` +
             `Date: %{x|%b %d}<br>` +
-                    `Volume: %{y:.5s} MCM<extra></extra>`
+                    `Volume: %{y:.5s} Mm³<extra></extra>`
         name = `${text.words.driestYear}: ${year}`
         showlegend = true
         zorder = 2
@@ -787,7 +787,7 @@ const plotCumulativeVolumes = ({retro, riverId, chartDiv}) => {
         lineStyle = {color: "green", width: 2}
         hovertemplate = `${year} (${text.words.medianYear})<br>` +
             `Date: %{x|%b %d}<br>` +
-                    `Volume: %{y:.5s} MCM<extra></extra>`
+                    `Volume: %{y:.5s} Mm³<extra></extra>`
         name = `${text.words.medianYear}: ${year}`
         showlegend = true
         zorder = 2
@@ -811,6 +811,7 @@ const plotCumulativeVolumes = ({retro, riverId, chartDiv}) => {
       type: "date",
       title: {text: text.words.months},
       tickformat: "%b %d",
+      dtick: "M1"
     },
     yaxis: {
       title: {text: text.plots.cumVolumeYaxis},
@@ -832,147 +833,186 @@ const plotCumulativeVolumeForecast = ({retro, riverId, chartDiv}) => {
   chartDiv.innerHTML = "";
 
   // 1. DYNAMIC REFERENCE DATE
-  const today = new Date();
-  const refMonth = today.getUTCMonth(); // 0-indexed (Jan=0, matches Python Month 1)
-  const refDay = today.getUTCDate();
+  const maxDate = new Date(Math.max(...retro.datetime));
+  const todayUTC = new Date(Date.UTC(maxDate.getUTCFullYear(), maxDate.getUTCMonth(), maxDate.getUTCDate()));
+  const refMonth = todayUTC.getUTCMonth();
+  const refDay = todayUTC.getUTCDate();
+
 
   const pastMonths = 9;
   const futureMonths = 3;
-  const SECONDS_IN_DAY = 86400;
+  const secondsPerDay = 86400;
 
   // 2. STORAGE
-  const pastCurves = {};   // year -> { relativeDay: volumeSum }
-  const futureCurves = {}; // year -> { relativeDay: volumeSum }
-  const futureTotals = {}; // year -> final 3-mo volume
+  const obsDaily = {};
+  const futureCurves = {};
+  const futureTotals = {};
 
-  // 3. DAILY AGGREGATION & RELATIVE DAY MAPPING
-  // Replicates: .groupby("DateDay").sum() and (date - ref_date).dt.days
+  const obsStart = new Date(todayUTC);
+  obsStart.setUTCMonth(obsStart.getUTCMonth() - pastMonths);
+
+  // 3. DATA PROCESSING
   retro.datetime.forEach((date, i) => {
     const flow = retro.discharge[i];
-    const volume = flow * SECONDS_IN_DAY;
+    const volume = flow * secondsPerDay; // Matches volume_cms calculation
     const year = date.getUTCFullYear();
 
-    // Check window for current year, previous year, and next year (Handles year-crossing)
+    // A. CONTINUOUS OBSERVED LINE
+    if (date >= obsStart && date <= todayUTC) {
+      const relativeDay = Math.round((date - todayUTC) / 86400000);
+      obsDaily[relativeDay] = (obsDaily[relativeDay] || 0) + volume;
+    }
+
+    // B. HISTORICAL CLONING
     for (let y = year - 1; y <= year + 1; y++) {
       const refDate = new Date(Date.UTC(y, refMonth, refDay));
-      const pastStart = new Date(refDate);
-      pastStart.setUTCMonth(pastStart.getUTCMonth() - pastMonths);
       const futureEnd = new Date(refDate);
       futureEnd.setUTCMonth(futureEnd.getUTCMonth() + futureMonths);
 
       const relativeDay = Math.round((date - refDate) / 86400000);
 
-      // Past Window Logic
-      if (date >= pastStart && date < refDate) {
-        if (!pastCurves[y]) pastCurves[y] = {};
-        pastCurves[y][relativeDay] = (pastCurves[y][relativeDay] || 0) + volume;
-      }
-      // Future Window Logic
-      else if (date >= refDate && date <= futureEnd) {
+      // Only capture data strictly AFTER the reference date
+      if (date > refDate && date <= futureEnd) {
         if (!futureCurves[y]) futureCurves[y] = {};
         futureCurves[y][relativeDay] = (futureCurves[y][relativeDay] || 0) + volume;
       }
     }
   });
 
-  // 4. STATISTICAL AGGREGATION
-  const calculateStats = (curvesObj, isFuture) => {
-    const dayData = {};
-    Object.entries(curvesObj).forEach(([year, days]) => {
-      let cumSum = 0;
-      // Sort days to ensure cumulative sum is calculated chronologically
-      const sortedDays = Object.keys(days).sort((a, b) => Number(a) - Number(b));
-      sortedDays.forEach(d => {
-        cumSum += days[d];
-        if (!dayData[d]) dayData[d] = [];
-        dayData[d].push(cumSum);
-      });
-      if (isFuture) futureTotals[year] = cumSum;
+  // 4. CALCULATE OBSERVED CUMULATIVE SUM
+  const obsSortedDays = Object.keys(obsDaily).sort((a, b) => Number(a) - Number(b));
+  let runningObsSum = 0;
+  const obsX = [];
+  const obsY = [];
+
+  obsSortedDays.forEach(d => {
+    runningObsSum += obsDaily[d];
+    obsX.push(Number(d));
+    obsY.push(runningObsSum / 1e6);
+  });
+
+  const anchor = runningObsSum; // Matches 'hist_anchor'
+
+
+  // 5. FORECAST STATISTICAL AGGREGATION
+  const calculateForecastStats = (curvesObj) => {
+  const curves = [];
+
+  Object.entries(curvesObj).forEach(([year, days]) => {
+    const sortedDays = Object.keys(days).sort((a, b) => Number(a) - Number(b));
+    if (sortedDays.length === 0) return;
+
+    const maxDayInYear = Math.max(...sortedDays.map(Number));
+    if (maxDayInYear < 85) return; // same completeness filter
+
+    let cumSum = 0;
+    const cumCurve = [];
+
+    sortedDays.forEach(d => {
+      cumSum += days[d];
+      cumCurve.push(cumSum);
     });
 
-    const daysArr = Object.keys(dayData).sort((a, b) => Number(a) - Number(b));
-    const getP = (q) => daysArr.map(d => {
-      const vals = dayData[d].sort((a, b) => a - b);
-      const idx = (vals.length - 1) * q;
-      const base = Math.floor(idx);
-      const rest = idx - base;
-      return vals[base + 1] !== undefined ? vals[base] + rest * (vals[base + 1] - vals[base]) : vals[base];
+    curves.push({
+      year,
+      total: cumSum,
+      days: sortedDays.map(Number),
+      cum: cumCurve
     });
 
-    return { days: daysArr.map(Number), median: getP(0.5), p25: getP(0.25), p75: getP(0.75) };
+    futureTotals[year] = cumSum; // keep for wettest/driest logic
+  });
+
+  // Sort curves by final cumulative volume
+  curves.sort((a, b) => a.total - b.total);
+
+  const n = curves.length;
+  if (n === 0) return null;
+
+  const idx25 = Math.floor(0.25 * (n - 1));
+  const idx50 = Math.floor(0.50 * (n - 1));
+  const idx75 = Math.floor(0.75 * (n - 1));
+
+  const p25Curve = curves[idx25];
+  const medianCurve = curves[idx50];
+  const p75Curve = curves[idx75];
+
+  return {
+    days: medianCurve.days,
+    p25: p25Curve.cum,
+    median: medianCurve.cum,
+    p75: p75Curve.cum
+  };
+};
+  const futureStats = calculateForecastStats(futureCurves);
+
+  // 6. PICK EXTREMES (Matching Python's min/max of future_totals)
+  const sortedYears = Object.entries(futureTotals).sort((a, b) => a[1] - b[1]);
+  const driestY = sortedYears.length > 0 ? sortedYears[0][0] : null;
+  const wettestY = sortedYears.length > 0 ? sortedYears[sortedYears.length - 1][0] : null;
+
+  // 7. PLOTLY TRACES
+  const traces = [
+    {
+      x: obsX, y: obsY,
+      name: "Observed (Last 9 Months)",
+      mode: "lines", line: { color: "#1f77b4", width: 3 }
+    },
+    {
+      x: [...futureStats.days, ...[...futureStats.days].reverse()],
+      y: [
+        ...futureStats.p75.map(v => (v + anchor) / 1e6),
+        ...[...futureStats.p25].reverse().map(v => (v + anchor) / 1e6)
+      ],
+      fill: "toself", fillcolor: "rgba(44, 160, 44, 0.2)",
+      line: { color: "transparent" }, name: "25–75th Percentile", type: "scatter"
+    },
+    {
+      x: futureStats.days,
+      y: futureStats.median.map(v => (v + anchor) / 1e6),
+      name: "Forecast Median", mode: "lines", line: { color: "#2ca02c", width: 3 }
+    }
+  ];
+
+  if (wettestY) {
+    traces.push({
+      x: futureStats.days,
+      y: futureStats.days.map(d => {
+        let sum = 0;
+        const yearDays = futureCurves[wettestY];
+        Object.keys(yearDays).forEach(day => { if(Number(day) <= d) sum += yearDays[day]; });
+        return (sum + anchor) / 1e6;
+      }),
+      name: `Wettest Year (${wettestY})`, mode: "lines", line: { dash: "dash", color: "navy", width: 1.5 }
+    });
+  }
+
+  if (driestY) {
+    traces.push({
+      x: futureStats.days,
+      y: futureStats.days.map(d => {
+        let sum = 0;
+        const yearDays = futureCurves[driestY];
+        Object.keys(yearDays).forEach(day => { if(Number(day) <= d) sum += yearDays[day]; });
+        return (sum + anchor) / 1e6;
+      }),
+      name: `Driest Year (${driestY})`, mode: "lines", line: { dash: "dash", color: "red", width: 1.5 }
+    });
+  }
+
+  const layout = {
+    title: { text:`Cumulative Volume Forecast for River: ${riverId}`},
+    xaxis: { title: { text: "Days Relative to Reference Date"}, zeroline: true },
+    yaxis: { title: { text: "Million Cubic Meters (MCM)" } },
+      shapes: [{
+      type: 'line', x0: 0, y0: 0, x1: 0, y1: 1,
+      yref: 'paper', line: { color: 'black', width: 2, dash: 'dot' }
+    }]
   };
 
-  const pastStats = calculateStats(pastCurves, false);
-  const futureStats = calculateStats(futureCurves, true);
+  const config = {responsive: true}
 
-  // Replicates: hist_anchor = past_median[-1]
-  const anchor = pastStats.median.length ? pastStats.median[pastStats.median.length - 1] : 0;
-
-  // 5. PICK EXTREMES (Replicates wettest_year and driest_year)
-  const sortedYears = Object.entries(futureTotals).sort((a, b) => a[1] - b[1]);
-  if (sortedYears.length === 0) return; // Error guard
-  const driestY = sortedYears[0][0];
-  const wettestY = sortedYears[sortedYears.length - 1][0];
-
-  // 6. PLOTLY TRACES
-  const traces = [
-  // 1. Past 9-Month Median
-  {
-    x: pastStats.days,
-    y: pastStats.median.map(v => v / 1e6),
-    name: "Past 9-mo Median",
-    mode: "lines",
-    line: { color: "blue", width: 2 }
-  },
-  // 2. Forecast Percentile Envelope
-  {
-    x: [...futureStats.days, ...[...futureStats.days].reverse()],
-    y: [...futureStats.p75.map(v => (v + anchor) / 1e6), ...[...futureStats.p25].reverse().map(v => (v + anchor) / 1e6)],
-    fill: "toself",
-    fillcolor: "rgba(0, 128, 0, 0.2)",
-    line: { color: "transparent" },
-    name: "25–75th Percentile",
-    type: "scatter"
-  },
-  // 3. Forecast Median
-  {
-    x: futureStats.days,
-    y: futureStats.median.map(v => (v + anchor) / 1e6),
-    name: "Forecast Median",
-    mode: "lines",
-    line: { color: "green", width: 3 }
-  },
-  // 4. Wettest Year (Dashed Navy)
-  {
-    x: futureStats.days,
-    y: futureStats.days.map(d => {
-      let sum = 0;
-      const yearDays = futureCurves[wettestY];
-      const days = Object.keys(yearDays).sort((a,b)=>a-b);
-      for(let day of days) { if(day <= d) sum += yearDays[day]; }
-      return (sum + anchor) / 1e6;
-    }),
-    name: `Wettest (${wettestY})`,
-    mode: "lines",
-    line: { dash: "dash", color: "navy", width: 1.5 }
-  },
-  // 5. Driest Year (Dashed Red)
-  {
-    x: futureStats.days,
-    y: futureStats.days.map(d => {
-      let sum = 0;
-      const yearDays = futureCurves[driestY];
-      const days = Object.keys(yearDays).sort((a,b)=>a-b);
-      for(let day of days) { if(day <= d) sum += yearDays[day]; }
-      return (sum + anchor) / 1e6;
-    }),
-    name: `Driest (${driestY})`,
-    mode: "lines",
-    line: { dash: "dash", color: "red", width: 1.5 }
-  }
-];
-
-  Plotly.newPlot(chartDiv, traces, { title: `Cumulative Volume Forecast - ${riverId}`, xaxis: { title: "Relative Days" }, yaxis: { title: "MCM" } });
+  Plotly.newPlot(chartDiv, traces, layout, config);
 };
 //////////////////////////////////////////////////////////////////////// Helper Functions
 const clearCharts = chartTypes => {
