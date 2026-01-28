@@ -952,7 +952,7 @@ const plotCumulativeVolumeForecast = ({retro, riverId, chartDiv}) => {
     {
       x: relDaysToDates(obsX, todayUTC),
       y: obsY,
-      name: "Observed (Last 9 Months)",
+      name: text.observedCumVolumeForecast,
       mode: "lines",
       line: { color: "#1f77b4", width: 3 },
       hovertemplate:
@@ -971,13 +971,13 @@ const plotCumulativeVolumeForecast = ({retro, riverId, chartDiv}) => {
       fill: "toself",
       fillcolor: "rgba(44, 160, 44, 0.2)",
       line: { color: "transparent" },
-      name: "25–75th Percentile",
+      name: text.percentilesCumVolumeForecast,
       type: "scatter"
     },
     {
       x: relDaysToDates(futureStats.days, todayUTC),
       y: futureStats.median.map(v => (v + anchor) / 1e6),
-      name: "Forecast Median",
+      name: text.forecastMedian,
       mode: "lines",
       line: { color: "#2ca02c", width: 3 },
       hovertemplate:
@@ -995,7 +995,7 @@ const plotCumulativeVolumeForecast = ({retro, riverId, chartDiv}) => {
         Object.keys(yearDays).forEach(day => { if (Number(day) <= d) sum += yearDays[day]; });
         return (sum + anchor) / 1e6;
       }),
-      name: `Wettest Year (${wettestY})`,
+      name: text.wettestYear + `(${wettestY})`,
       mode: "lines",
       line: { dash: "dash", color: "navy", width: 1.5 },
       hovertemplate:
@@ -1013,7 +1013,7 @@ const plotCumulativeVolumeForecast = ({retro, riverId, chartDiv}) => {
         Object.keys(yearDays).forEach(day => { if (Number(day) <= d) sum += yearDays[day]; });
         return (sum + anchor) / 1e6;
       }),
-      name: `Driest Year (${driestY})`,
+      name: text.driestYear + `(${driestY})`,
       mode: "lines",
       line: { dash: "dash", color: "red", width: 1.5 },
       hovertemplate:
@@ -1023,16 +1023,16 @@ const plotCumulativeVolumeForecast = ({retro, riverId, chartDiv}) => {
   }
 
   const layout = {
-    title: { text: `Cumulative Volume Forecast for River: ${riverId}` },
+    title: { text: text.cumVolumeForecastTitle + `${riverId}` },
     xaxis: {
-      title: { text: "Date" },
+      title: { text: text.date },
       type: "date",
       tickformat: "%b",
       dtick: "M1",
       tick0: relDaysToDates([0], todayUTC)[0],
       zeroline: true
     },
-    yaxis: { title: { text: "Million Cubic Meters (MCM)" } },
+    yaxis: { title: { text: text.millionMetersCubed } },
     shapes: [{
       type: 'line',
       x0: todayUTC,

@@ -34,7 +34,8 @@ window.text = {
     "wettestYear": "Wettest Year",
     "driestYear": "Driest Year",
     "medianYear": "Median Year",
-    "average": "Average"
+    "average": "Average",
+    "forecastMedian": "Forecast Median"
   },
   "statusLabels": [
     "Very Wet",
@@ -78,6 +79,8 @@ window.text = {
     "heatMapXaxis": "Month",
     "cumVolumeTitle": "Cumulative Volume by Year for River: ",
     "cumVolumeYaxis": "Cumulative Volume (million m³)",
-
+    "percentilesCumVolumeForecast": "25-75th Percentile",
+    "observedCumVolumeForecast": "Observed (Last 9 Months)",
+    "cumVolumeForecastTitle": "Cumulative Volume Forecast for River: "
   }
 }

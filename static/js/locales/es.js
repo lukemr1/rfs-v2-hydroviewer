@@ -33,7 +33,8 @@ window.text = {
     "wettestYear": "Año Más Lluvioso",
     "driestYear": "Año Más Seco",
     "medianYear": "Año Medio",
-    "average": "Promedio"
+    "average": "Promedio",
+    "forecastMedian": "Médiane de prévision"
   },
   "statusLabels": [
     "Muy Mojado",
@@ -79,6 +80,10 @@ window.text = {
     "peaksTitle": "Fecha de caudal máximo anual del río: ",
     "peaksXaxis": "Mes",
     "heatMapTitle": "Caudal río promedio para el río: ",
-    "heatMapXaxis": "Mes"
+    "heatMapXaxis": "Mes",
+    "cumVolumeYaxis": "Volumen acumulado (millones de m³)",
+    "percentilesCumVolumeForecast": "Percentiles 25–75",
+    "observedCumVolumeForecast": "Observado: últimos 9 meses",
+    "cumVolumeForecastTitle": "Pronóstico de volumen acumulado para el río: "
   }
 }
