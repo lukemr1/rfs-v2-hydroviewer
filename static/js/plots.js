@@ -494,9 +494,7 @@ const plotYearlyPeaks = ({yearlyPeaks, riverId, chartDiv, biasCorrected}) => {
   const formatVal = val => {
     if (val >= 1000) return `${Math.round((val / 1000) * 10) / 10}k`;
     if (val === 0) return "0";
-    const magnitude = Math.floor(Math.log10(Math.abs(val)));
-    const factor = 10 ** (magnitude - 2);
-    return Math.round(val / factor) * factor;
+    return val.toFixed(2);
   };
 
   // --- Circular logic for outlier detection ---
@@ -642,94 +640,6 @@ const plotYearlyPeaks = ({yearlyPeaks, riverId, chartDiv, biasCorrected}) => {
 
   Plotly.newPlot(chartDiv, traces, layout, config);
 }
-const plotRasterHydrograph = ({retro, riverId, chartDiv}) => {
-  chartDiv.innerHTML = "";
-
-  // --- Helper functions ---
-  const formatVal = v =>
-    v == null ? null :
-      v >= 1000 ? `${Math.round((v / 1000) * 10) / 10}k` :
-        v === 0 ? "0" :
-          (() => {
-            const m = Math.floor(Math.log10(Math.abs(v)));
-            const f = 10 ** (m - 2);
-            return Math.round(v / f) * f;
-          })();
-
-  // --- Preprocess data into (year, doy, flow) ---
-  const firstYear = retro.datetime[0].getUTCFullYear();
-  const lastYear = retro.datetime[retro.datetime.length - 1].getUTCFullYear();
-  const nYears = lastYear + 1 - firstYear;
-  const xDays = Array.from({length: 366}, (_, i) => i + 1)
-  const yYears = Array.from({length: nYears}, (_, i) => firstYear + i)
-  const zValues = Array.from({length: nYears}, () => Array.from({length: 366}, () => null));
-  // get a list of all 366 possible days in month-day format then for each year, create a label list
-  const allDays = Array.from({length: 366}, (_, i) => {
-    const d = new Date(Date.UTC(2023, 0, i + 1));
-    return `${d.toLocaleString(lang, {month: "short", timeZone: "UTC"})} ${d.getUTCDate()}`;
-  });
-  const hoverLabelData = yYears.map(year => {
-    return allDays.map(date => {
-      return {year, date}
-    });
-  });
-
-  let currentYear = firstYear;
-  let yearIdx = 0;
-  let doyIdx = -1;
-  retro.datetime.forEach((date, idx) => {
-    const year = date.getUTCFullYear();
-    if (year !== currentYear) {
-      currentYear = year;
-      doyIdx = 0;
-      yearIdx += 1;
-    } else {
-      doyIdx += 1;
-    }
-    zValues[yearIdx][doyIdx] = retro.discharge[idx];
-  });
-
-  // --- Data range + bin setup ---
-  const valsFlat = zValues.flat()
-  const vmin = Math.min(...valsFlat);
-  const vmax = Math.max(...valsFlat);
-  const nBins = 7;
-  const viridis = ["#440154", "#414487", "#2a788e", "#22a884", "#7ad151", "#bddf26", "#fde725"];
-  const binEdges = Array.from({length: nBins + 1}, (_, i) => vmin + (i * (vmax - vmin)) / nBins);
-  const colorscale = binEdges.slice(0, -1).flatMap((_, i) => {
-    const p = i / nBins, c = viridis[i];
-    return [[p, c], [(i + 1) / nBins, c]];
-  });
-
-  // --- Map values to bin midpoints ---
-  const binMid = binEdges.map((v, i) => (v + binEdges[i + 1]) / 2).slice(0, -1);
-  const binnedMatrix = zValues.map(row => {
-    return row.map(v => v == null ? null : binMid.find((_, i) => v <= binEdges[i + 1]) ?? binMid.at(-1))
-  })
-
-  Plotly.newPlot(chartDiv, [{
-    z: binnedMatrix,
-    x: xDays,
-    y: yYears,
-    type: "heatmap",
-    colorscale,
-    zmin: vmin,
-    zmax: vmax,
-    customdata: hoverLabelData,
-    hovertemplate: `${text.words.year}: %{y}<br>${text.words.date}: %{customdata.date}<br>${text.words.discharge}: %{z} m³/s<extra></extra>`,
-    colorbar: {
-      title: {text: `${text.words.discharge} (m³/s)`, side: "top"},
-      tickvals: binMid,
-      ticktext: binMid.map((v, i) => `${formatVal(binEdges[i])}–${formatVal(binEdges[i + 1])}`)
-    },
-    hoverinfo: "skip"
-  }], {
-    title: {text: `${text.plots.heatMapTitle}${riverId}`, x: 0.5},
-    xaxis: {title: text.plots.heatMapXaxis, side: "bottom", fixedrange: true, tickvals: [1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335], ticktext: monthNames},
-    yaxis: {title: text.words.year, fixedrange: true},
-    margin: {t: 80, l: 80, r: 80, b: 70},
-  });
-};
 const plotCumulativeVolumes = ({retro, riverId, chartDiv}) => {
   chartDiv.innerHTML = "";
 
@@ -751,7 +661,10 @@ const plotCumulativeVolumes = ({retro, riverId, chartDiv}) => {
     total: arr.y[arr.y.length - 1]
   }));
 
-  const sortedTotals = [...totals].sort((a, b) => a.total - b.total);
+  const currentYear = new Date().getUTCFullYear();
+  const workingTotals = totals.filter(t => t.year < currentYear)
+
+  const sortedTotals = [...workingTotals].sort((a, b) => a.total - b.total);
   const driestYear = sortedTotals[0].year;
   const wettestYear = sortedTotals[sortedTotals.length - 1].year;
   const medianYear = sortedTotals[Math.floor(sortedTotals.length / 2)].year;
@@ -760,25 +673,33 @@ const plotCumulativeVolumes = ({retro, riverId, chartDiv}) => {
     .entries(cumulative)
     .map(([year, arr]) => {
       let lineStyle = {color: "lightgray", width: 0.8}
-      let hovertemplate = null
+      let hovertemplate = `${text.words.year}: ${year}<br>` +
+                      `Date: %{x|%b %d}<br>` +
+                      `Volume: %{y:.5s} Mm³<extra></extra>`
       let name = year
       let showlegend = false
       let zorder = 0
       if (+year === wettestYear) {
         lineStyle = {color: "blue", width: 2}
-        hovertemplate = `${text.words.year}: ${year} (${text.words.wettestYear})`
+        hovertemplate = `${year} (${text.words.wettestYear})<br>` +
+            `Date: %{x|%b %d}<br>` +
+                    `Volume: %{y:.5s} Mm³<extra></extra>`
         name = `${text.words.wettestYear}: ${year}`
         showlegend = true
         zorder = 2
       } else if (+year === driestYear) {
         lineStyle = {color: "red", width: 2}
-        hovertemplate = `${text.words.year}: ${year} (${text.words.driestYear})`
+        hovertemplate = `${year} (${text.words.driestYear})<br>` +
+            `Date: %{x|%b %d}<br>` +
+                    `Volume: %{y:.5s} Mm³<extra></extra>`
         name = `${text.words.driestYear}: ${year}`
         showlegend = true
         zorder = 2
       } else if (+year === medianYear) {
         lineStyle = {color: "green", width: 2}
-        hovertemplate = `${text.words.year}: ${year} (${text.words.medianYear})`
+        hovertemplate = `${year} (${text.words.medianYear})<br>` +
+            `Date: %{x|%b %d}<br>` +
+                    `Volume: %{y:.5s} Mm³<extra></extra>`
         name = `${text.words.medianYear}: ${year}`
         showlegend = true
         zorder = 2
@@ -802,6 +723,7 @@ const plotCumulativeVolumes = ({retro, riverId, chartDiv}) => {
       type: "date",
       title: {text: text.words.months},
       tickformat: "%b %d",
+      dtick: "M1"
     },
     yaxis: {
       title: {text: text.plots.cumVolumeYaxis},
