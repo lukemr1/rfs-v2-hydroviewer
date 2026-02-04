@@ -494,9 +494,7 @@ const plotYearlyPeaks = ({yearlyPeaks, riverId, chartDiv, biasCorrected}) => {
   const formatVal = val => {
     if (val >= 1000) return `${Math.round((val / 1000) * 10) / 10}k`;
     if (val === 0) return "0";
-    const magnitude = Math.floor(Math.log10(Math.abs(val)));
-    const factor = 10 ** (magnitude - 2);
-    return Math.round(val / factor) * factor;
+    return val.toFixed(2);
   };
 
   // --- Circular logic for outlier detection ---
@@ -751,7 +749,10 @@ const plotCumulativeVolumes = ({retro, riverId, chartDiv}) => {
     total: arr.y[arr.y.length - 1]
   }));
 
-  const sortedTotals = [...totals].sort((a, b) => a.total - b.total);
+  const currentYear = new Date().getUTCFullYear();
+  const workingTotals = totals.filter(t => t.year < currentYear)
+
+  const sortedTotals = [...workingTotals].sort((a, b) => a.total - b.total);
   const driestYear = sortedTotals[0].year;
   const wettestYear = sortedTotals[sortedTotals.length - 1].year;
   const medianYear = sortedTotals[Math.floor(sortedTotals.length / 2)].year;
@@ -760,25 +761,33 @@ const plotCumulativeVolumes = ({retro, riverId, chartDiv}) => {
     .entries(cumulative)
     .map(([year, arr]) => {
       let lineStyle = {color: "lightgray", width: 0.8}
-      let hovertemplate = null
+      let hovertemplate = `${text.words.year}: ${year}<br>` +
+                      `Date: %{x|%b %d}<br>` +
+                      `Volume: %{y:.5s} Mm³<extra></extra>`
       let name = year
       let showlegend = false
       let zorder = 0
       if (+year === wettestYear) {
         lineStyle = {color: "blue", width: 2}
-        hovertemplate = `${text.words.year}: ${year} (${text.words.wettestYear})`
+        hovertemplate = `${year} (${text.words.wettestYear})<br>` +
+            `Date: %{x|%b %d}<br>` +
+                    `Volume: %{y:.5s} Mm³<extra></extra>`
         name = `${text.words.wettestYear}: ${year}`
         showlegend = true
         zorder = 2
       } else if (+year === driestYear) {
         lineStyle = {color: "red", width: 2}
-        hovertemplate = `${text.words.year}: ${year} (${text.words.driestYear})`
+        hovertemplate = `${year} (${text.words.driestYear})<br>` +
+            `Date: %{x|%b %d}<br>` +
+                    `Volume: %{y:.5s} Mm³<extra></extra>`
         name = `${text.words.driestYear}: ${year}`
         showlegend = true
         zorder = 2
       } else if (+year === medianYear) {
         lineStyle = {color: "green", width: 2}
-        hovertemplate = `${text.words.year}: ${year} (${text.words.medianYear})`
+        hovertemplate = `${year} (${text.words.medianYear})<br>` +
+            `Date: %{x|%b %d}<br>` +
+                    `Volume: %{y:.5s} Mm³<extra></extra>`
         name = `${text.words.medianYear}: ${year}`
         showlegend = true
         zorder = 2
@@ -802,6 +811,7 @@ const plotCumulativeVolumes = ({retro, riverId, chartDiv}) => {
       type: "date",
       title: {text: text.words.months},
       tickformat: "%b %d",
+      dtick: "M1"
     },
     yaxis: {
       title: {text: text.plots.cumVolumeYaxis},
