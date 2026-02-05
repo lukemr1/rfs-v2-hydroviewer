@@ -1,8 +1,14 @@
-import {clearCharts, displayLoadingStatus, displayRiverNumber, divModalCharts, inputForecastDate, lang, riverIdInput, updateDownloadLinks} from "./ui.js";
+import "./css/main.css"
+import "./css/materialize.overrides.css"
+import "./css/report.print.css"
+
+import {clearCharts, displayLoadingStatus, displayRiverNumber, divModalCharts, inputForecastDate, riverIdInput, updateDownloadLinks} from "./ui.js";
+import {lang} from "./intl.js";
 import {getAndCacheForecast, getAndCacheRetrospective, getAndCacheReturnPeriods} from "./data/main.js";
 import {bookmarks} from "./bookmarks.js";
 import {LoadStatus, RiverId, UseBiasCorrected, UseShowExtraRetroGraphs, UseSimpleForecast} from "./states/state.js";
 import {plotAllForecast, plotAllRetro} from "./plots.js";
+import "./map.js"
 
 //////////////////////////////////////////////////////////////////////// INITIAL LOAD
 M.AutoInit();

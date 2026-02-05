@@ -8,35 +8,16 @@
   <meta name="author" content="Riley Hales PhD">
   <meta name="keywords" content="RFS, River Forecast System, Hydrology, Streamflow, Global, GEOGLOWS, Hydroviewer, Streamflow, Forecast, Retrospective">
   <meta name="robots" content="index, follow">
-  <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png">
 
   <!-- CSS Framework -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-  <!-- Plotly -->
-  <script src="https://cdn.plot.ly/plotly-3.1.0.min.js" charset="utf-8"></script>
-  <!-- ArcGIS JS -->
-  <script type="module" src="https://js.arcgis.com/calcite-components/3.2.1/calcite.esm.js"></script>
-  <link rel="stylesheet" href="https://js.arcgis.com/4.33/esri/themes/light/main.css"/>
-  <script src="https://js.arcgis.com/4.33/"></script>
-  <script type="module" src="https://js.arcgis.com/4.33/map-components/"></script>
-  <!-- App -->
-  <script type="module" defer src="https://cdn.jsdelivr.net/npm/zarrita/+esm"></script>
-  <link rel="stylesheet" href="/static/css/main.css"/>
-  <link rel="stylesheet" href="/static/css/materialize.overrides.css"/>
-  <script type="application/javascript" src="/static/js/locales/en-US.js"></script>
-  <script type="module" defer src="/static/js/plots.js"></script>
-  <script type="module" defer src="/static/js/reports.js"></script>
-  <script type="module" defer src="/static/js/ui.js"></script>
-  <script type="module" defer src="/static/js/data/zarrUtilities.js"></script>
-  <script type="module" defer src="/static/js/data/data.js"></script>
-  <script type="module" defer src="/static/js/data/cache.js"></script>
-  <script type="module" defer src="/static/js/data/main.js"></script>
-  <script type="module" defer src="/static/js/map.js"></script>
-  <script type="module" defer src="/static/js/main.js"></script>
+  <!-- Vite entry point -->
+  <script type="module" src="/src/main.js" defer></script>
 </head>
 
 <body>
@@ -341,21 +322,19 @@
   </div>
 
   <arcgis-map item-id="a69f14ea2e784e019f4a4b6835ffd376">
-    <arcgis-zoom position="top-left"></arcgis-zoom>
-    <arcgis-locate position="top-left" scale="5000"></arcgis-locate>
+    <arcgis-zoom slot="top-left"></arcgis-zoom>
+    <arcgis-locate slot="top-left" scale="5000"></arcgis-locate>
 
-    <arcgis-expand close-on-esc position="top-right" title="Layer List">
+    <arcgis-expand slot="top-right" title="Layer List">
       <arcgis-layer-list class="large-icon"></arcgis-layer-list>
     </arcgis-expand>
-    <arcgis-expand close-on-esc position="top-right" title="Basemap Gallery">
+    <arcgis-expand slot="top-right" title="Basemap Gallery">
       <arcgis-basemap-gallery></arcgis-basemap-gallery>
     </arcgis-expand>
 
-    <arcgis-expand close-on-esc position="bottom-left" mode="floating" data-tooltip="Legend">
-      <arcgis-legend legend-style="classic"></arcgis-legend>
-    </arcgis-expand>
+    <arcgis-legend slot="bottom-left" legend-style="classic"></arcgis-legend>
 
-    <arcgis-scale-bar position="bottom-right" bar-style="line" unit="dual"></arcgis-scale-bar>
+    <arcgis-scale-bar slot="bottom-right" bar-style="line" unit="dual"></arcgis-scale-bar>
   </arcgis-map>
 
   <div id="timeSliderForecastWrapper" data-category="map" class="time-sliders">

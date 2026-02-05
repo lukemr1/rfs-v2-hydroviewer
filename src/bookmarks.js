@@ -1,4 +1,4 @@
-import namedDefaultRivers from "../json/namedDefaultRivers.json" with {type: "json"}
+import namedDefaultRivers from "./json/namedDefaultRivers.json" with {type: "json"}
 import {RiverId} from "./states/state.js";
 import {validateRiverNumber} from "./data/main.js";
 

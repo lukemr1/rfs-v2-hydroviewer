@@ -8,9 +8,9 @@
   <meta name="author" content="Riley Hales PhD">
   <meta name="keywords" content="RFS, River Forecast System, Hydrology, Streamflow, Global, GEOGLOWS, Hydroviewer, Streamflow, Forecast, Retrospective">
   <meta name="robots" content="index, follow">
-  <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png">
 
   <!-- CSS Framework -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
@@ -23,20 +23,10 @@
   <link rel="stylesheet" href="https://js.arcgis.com/4.33/esri/themes/light/main.css"/>
   <script src="https://js.arcgis.com/4.33/"></script>
   <script type="module" src="https://js.arcgis.com/4.33/map-components/"></script>
-  <!-- App -->
-  <script type="module" defer src="https://cdn.jsdelivr.net/npm/zarrita/+esm"></script>
-  <link rel="stylesheet" href="/static/css/main.css"/>
-  <link rel="stylesheet" href="/static/css/materialize.overrides.css"/>
-  <script type="application/javascript" src="/static/js/locales/es.js"></script>
-  <script type="module" defer src="/static/js/plots.js"></script>
-  <script type="module" defer src="/static/js/reports.js"></script>
-  <script type="module" defer src="/static/js/ui.js"></script>
-  <script type="module" defer src="/static/js/data/zarrUtilities.js"></script>
-  <script type="module" defer src="/static/js/data/data.js"></script>
-  <script type="module" defer src="/static/js/data/cache.js"></script>
-  <script type="module" defer src="/static/js/data/main.js"></script>
-  <script type="module" defer src="/static/js/map.js"></script>
-  <script type="module" defer src="/static/js/main.js"></script>
+  <!-- Locale (must load before app module) -->
+  <script type="application/javascript" src="/src/json/locales/es.json"></script>
+  <!-- App (Vite entry point) -->
+  <script type="module" src="/src/main.js"></script>
 </head>
 
 <body>

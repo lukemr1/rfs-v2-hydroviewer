@@ -1,5 +1,8 @@
-import {divChartFdc, divChartForecast, divChartRetro, divChartStatus, divChartYearlyVol, divCumulativeVolume, divRasterHydrograph, divTableForecast, divYearlyPeaks, lang} from './ui.js'
+import Plotly from 'plotly.js-dist-min'
+
+import {divChartFdc, divChartForecast, divChartRetro, divChartStatus, divChartYearlyVol, divCumulativeVolume, divRasterHydrograph, divTableForecast, divYearlyPeaks} from './ui.js'
 import {UseShowExtraRetroGraphs} from "./states/state.js";
+import {lang, text} from "./intl.js";
 
 //////////////////////////////////////////////////////////////////////// Constants and configs
 const defaultDateRange = ['2015-01-01', new Date().toISOString().split("T")[0]]

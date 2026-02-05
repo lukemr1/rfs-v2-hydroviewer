@@ -1,10 +1,10 @@
 import {bookmarks} from "./bookmarks.js";
 import {forecastProbabilityTable, plotForecast} from "./plots.js";
-
-const loadingImageTag = '<img src="/static/img/loading.io.svg" alt="loading" style="height: 100%">'
+import {loadingImageTag} from "./ui.js";
+import DataFetcherWorker from './workers/dataFetcher.js?worker';
 
 const maxWorkers = 3;
-const workers = Array.from({length: maxWorkers}, () => new Worker('/static/js/workers/dataFetcher.js', {type: 'module'}));
+const workers = Array.from({length: maxWorkers}, () => new DataFetcherWorker());
 
 const reportIframe = document.getElementById('report-pdf-frame');
 const reportRenderSpace = document.getElementById('report-render-space');
@@ -119,7 +119,7 @@ const plotReportData = async (data) => {
       riverId: riverData.riverId,
       chartDiv: reportRenderSpace,
     });
-    // remove all the controls from the plotDiv and make it static
+    // remove all the controls from the plotDiv and make it src
     reportRenderSpace.querySelectorAll('.modebar, .legendtoggle, .zoomlayer').forEach(el => el.remove());
     const url = await Plotly.toImage(reportRenderSpace, {format: 'png', width: 800, height: 500})
     reportRenderSpace.innerHTML = '';
@@ -147,7 +147,7 @@ ${forecastProbabilityTable({forecast: riverData.forecast, rp: riverData.returnPe
 <html lang="en">
 <head>
   <title>River Forecast Report</title>
-  <link rel="stylesheet" type="text/css" href="/static/css/report.print.css">
+  <link rel="stylesheet" type="text/css" href="/src/css/report.print.css">
 </head>
 <body>
   <div id="report">

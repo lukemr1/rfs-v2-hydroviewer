@@ -32,8 +32,7 @@ export const divRasterHydrograph = document.getElementById("rasterHydrographPlot
 export const divCumulativeVolume = document.getElementById("cumVolume")
 
 // Misc constants
-export const lang = window.location.pathname.split("/").filter(x => x && !x.includes(".html") && !x.includes('viewer'))[0] || 'en-US'
-const loadingImageTag = `<img src="/static/img/loading.io.svg" alt="loading">`
+export const loadingImageTag = `<img src="/img/loading.io.svg" alt="loading">`
 
 ////////////////// Event Listeners
 const clearCacheButtons = Array.from(document.getElementsByClassName("clear-cache"))

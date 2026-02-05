@@ -1,4 +1,4 @@
-window.text = {
+{
   "words": {
     "riverid": "ID del Río",
     "forecast": "Pronóstico",
@@ -40,7 +40,7 @@ window.text = {
     "Mojado",
     "Normal",
     "Seco",
-    "Muy Seco",
+    "Muy Seco"
   ],
   "prompts": {
     "mobile": "Desliza para mover. Pellizca para hacer zoom. Toca para seleccionar ríos. Desliza este mensaje para descartarlo.",
