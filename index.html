@@ -324,6 +324,9 @@
   <arcgis-map item-id="a69f14ea2e784e019f4a4b6835ffd376">
     <arcgis-zoom slot="top-left"></arcgis-zoom>
     <arcgis-locate slot="top-left" scale="5000"></arcgis-locate>
+    <calcite-action id="filter-button" scale="s" icon="filter" appearance="solid" slot="top-left" title="Filter Streams on Map"></calcite-action>
+    <calcite-action id="forecast-time-slider" scale="s" icon="clock" appearance="solid" slot="top-left" title="Stream Layer Forecast Time Steps"></calcite-action>
+    <calcite-action id="hydrosos-time-slider" scale="s" appearance="solid" slot="top-left" title="HydroSOS Layer Time Steps"><span>SOS</span></calcite-action>
 
     <arcgis-expand slot="top-right" title="Layer List">
       <arcgis-layer-list class="large-icon"></arcgis-layer-list>
@@ -332,7 +335,9 @@
       <arcgis-basemap-gallery></arcgis-basemap-gallery>
     </arcgis-expand>
 
-    <arcgis-legend slot="bottom-left" legend-style="classic"></arcgis-legend>
+    <arcgis-expand slot="bottom-left" title="Legend">
+      <arcgis-legend legend-style="classic"></arcgis-legend>
+    </arcgis-expand>
 
     <arcgis-scale-bar slot="bottom-right" bar-style="line" unit="dual"></arcgis-scale-bar>
   </arcgis-map>

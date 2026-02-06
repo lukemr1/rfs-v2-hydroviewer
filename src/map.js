@@ -8,6 +8,7 @@ import "@arcgis/map-components/components/arcgis-expand";
 import "@arcgis/map-components/components/arcgis-basemap-gallery";
 import "@arcgis/map-components/components/arcgis-legend";
 import "@arcgis/map-components/components/arcgis-time-slider";
+import "@esri/calcite-components/components/calcite-action";
 
 import MapImageLayer from "@arcgis/core/layers/MapImageLayer";
 import ImageryLayer from "@arcgis/core/layers/ImageryLayer";
@@ -30,6 +31,11 @@ const MIN_QUERY_ZOOM = 11
 export const mapElement = document.querySelector('arcgis-map')
 export const timeSliderForecastDiv = document.getElementById('timeSliderForecastWrapper')
 export const timeSliderStatusDiv = document.getElementById('timeSliderHydroSOSWrapper')
+const filterButton = document.querySelector('calcite-action#filter-button')
+const timeSliderForecastButton = document.querySelector('calcite-action#forecast-time-slider')
+const timeSliderHydroSOSButton = document.querySelector('calcite-action#hydrosos-time-slider')
+const timeSliderForecast = document.querySelector('arcgis-time-slider#timeSliderForecast')
+const timeSliderHydroSOS = document.querySelector('arcgis-time-slider#timeSliderHydroSOS')
 
 export default function main() {
   ////////////////////////////////////////////////////////////////////////  Initial state and config
@@ -104,30 +110,6 @@ export default function main() {
     minZoom: 2,
   }
 
-  const filterButton = document.createElement('div');
-  filterButton.setAttribute("title", 'Filter Visible Streams');
-  filterButton.className = "esri-widget--button esri-widget esri-interactive";
-  filterButton.innerHTML = `<span class="esri-icon-filter"></span>`;
-  filterButton.addEventListener('click', () => M.Modal.getInstance(modalFilter).open());
-
-  const timeSliderForecastButton = document.createElement('div');
-  timeSliderForecastButton.setAttribute("title", 'Forecast Layer Time steps');
-  timeSliderForecastButton.className = "esri-widget--button esri-widget esri-interactive";
-  timeSliderForecastButton.innerHTML = `<span class="esri-icon-time-clock"></span>`;
-  timeSliderForecastButton.addEventListener('click', () => {
-    timeSliderForecastDiv.classList.toggle('show-slider')
-    timeSliderStatusDiv.classList.remove('show-slider')
-  })
-
-  const timeSliderHydroSOSButton = document.createElement('div');
-  timeSliderHydroSOSButton.setAttribute("title", 'Monthly Status Layer Time steps');
-  timeSliderHydroSOSButton.className = "esri-widget--button esri-widget esri-interactive";
-  timeSliderHydroSOSButton.innerHTML = `SOS`;
-  timeSliderHydroSOSButton.addEventListener('click', () => {
-    timeSliderForecastDiv.classList.remove('show-slider')
-    timeSliderStatusDiv.classList.toggle('show-slider')
-  })
-
   const timeSliderForecast = new TimeSlider({
     container: "timeSliderForecast",
     view: view,
@@ -136,7 +118,7 @@ export default function main() {
     label: "Forecast Layer Time Steps",
     mode: "instant",
   });
-  const timeSliderStatus = new TimeSlider({
+  const timeSliderHydroSOS = new TimeSlider({
     container: "timeSliderHydroSOS",
     playRate: 3000,
     loop: true,
@@ -153,12 +135,9 @@ export default function main() {
       }
     }
   });
-  timeSliderStatus.when(() => timeSliderStatus.previous())  // once the slider is ready go to the most recent time. starts at 0, previous is -1/last index
+  timeSliderHydroSOS.when(() => timeSliderHydroSOS.previous())  // once the slider is ready go to the most recent time. starts at 0, previous is -1/last index
 
   view.navigation.browserTouchPanEnabled = true;
-  view.ui.add(filterButton, "top-left");
-  view.ui.add(timeSliderForecastButton, "top-left");
-  view.ui.add(timeSliderHydroSOSButton, "top-left");
 
   const rfsLayer = new MapImageLayer({
     url: RFS_LAYER_URL,
@@ -205,9 +184,9 @@ export default function main() {
   })
 
   // handle interactions with the monthly status tile layer
-  reactiveUtils.watch(() => timeSliderStatus.timeExtent, () => {
-    const year = timeSliderStatus.timeExtent.start.toISOString().slice(0, 4)
-    const month = timeSliderStatus.timeExtent.start.toISOString().slice(5, 7)
+  reactiveUtils.watch(() => timeSliderHydroSOS.timeExtent, () => {
+    const year = timeSliderHydroSOS.timeExtent.start.toISOString().slice(0, 4)
+    const month = timeSliderHydroSOS.timeExtent.start.toISOString().slice(5, 7)
     const layerPickerIndex = map.layers.indexOf(cogMonthlyStatusLayer)
     const layerWasVisible = cogMonthlyStatusLayer.visible
     // todo: delete/recreate causes an error when changing dates quickly but you can't edit the url and trigger a re-load
@@ -257,6 +236,17 @@ export default function main() {
 
 mapElement.addEventListener('arcgisViewReadyChange', () => main())
 
+filterButton.addEventListener('click', () => {
+  M.Modal.getInstance(modalFilter).open()
+})
+timeSliderForecastButton.addEventListener('click', () => {
+  timeSliderForecastDiv.classList.toggle('show-slider')
+  timeSliderStatusDiv.classList.remove('show-slider')
+})
+timeSliderHydroSOSButton.addEventListener('click', () => {
+  timeSliderForecastDiv.classList.remove('show-slider')
+  timeSliderStatusDiv.classList.toggle('show-slider')
+})
 selectRiverCountry.innerHTML += riverCountries.map(c => `<option value="${c}">${c}</option>`).join('')
 selectOutletCountry.innerHTML += outletCountries.map(c => `<option value="${c}">${c}</option>`).join('')
 selectVPU.innerHTML += vpuList.map(v => `<option value="${v}">${v}</option>`).join('')
