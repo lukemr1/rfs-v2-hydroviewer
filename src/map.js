@@ -23,9 +23,9 @@ import * as intl from "@arcgis/core/intl";
 import {buildFilterExpression, inputForecastDate, modalFilter, resetFilterForm, RFS_LAYER_URL, selectOutletCountry, selectRiverCountry, selectVPU, showChartView, updateHash,} from "./ui.js";
 import {lang} from "./intl.js";
 import {LoadStatus, RiverId} from "./states/state.js";
-import riverCountries from "/Users/rchales/code/rfs-v2-hydroviewer/src/json/riverCountries.json" with {type: "json"};
-import outletCountries from "/Users/rchales/code/rfs-v2-hydroviewer/src/json/outletCountries.json" with {type: "json"};
-import vpuList from "/Users/rchales/code/rfs-v2-hydroviewer/src/json/vpuList.json" with {type: "json"};
+import riverCountries from "./json/riverCountries.json" with {type: "json"};
+import outletCountries from "./json/outletCountries.json" with {type: "json"};
+import vpuList from "./json/vpuList.json" with {type: "json"};
 
 const MIN_QUERY_ZOOM = 11
 export const mapElement = document.querySelector('arcgis-map')
