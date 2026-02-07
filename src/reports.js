@@ -2,6 +2,7 @@ import {bookmarks} from "./bookmarks.js";
 import {forecastProbabilityTable, plotForecast} from "./plots.js";
 import {loadingImageTag} from "./ui.js";
 import DataFetcherWorker from './workers/dataFetcher.js?worker';
+import Plotly from "plotly.js/lib/core";
 
 const maxWorkers = 3;
 const workers = Array.from({length: maxWorkers}, () => new DataFetcherWorker());
