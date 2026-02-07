@@ -18,7 +18,6 @@ M.Dropdown.init(document.querySelectorAll('.dropdown-trigger'), {
   alignment: 'right',
   constrainWidth: false
 });
-Plotly.setPlotConfig({'locale': lang})
 if (window.innerWidth < 800) M.toast({html: text.prompts.mobile, classes: "blue custom-toast-placement", displayLength: 7500})
 
 const fetchData = ({riverId, display = true} = {}) => {

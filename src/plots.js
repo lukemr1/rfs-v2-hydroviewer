@@ -1,8 +1,13 @@
-import Plotly from 'plotly.js-dist-min'
+import Plotly from 'plotly.js/lib/core';
+import scatter from 'plotly.js/lib/scatter';
+import heatmap from 'plotly.js/lib/heatmap';
 
 import {divChartFdc, divChartForecast, divChartRetro, divChartStatus, divChartYearlyVol, divCumulativeVolume, divRasterHydrograph, divTableForecast, divYearlyPeaks} from './ui.js'
 import {UseShowExtraRetroGraphs} from "./states/state.js";
 import {lang, text} from "./intl.js";
+
+Plotly.register([scatter, heatmap]);
+Plotly.setPlotConfig({'locale': lang})
 
 //////////////////////////////////////////////////////////////////////// Constants and configs
 const defaultDateRange = ['2015-01-01', new Date().toISOString().split("T")[0]]

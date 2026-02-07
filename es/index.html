@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <title>River Forecast System</title>
@@ -16,17 +16,8 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-  <!-- Plotly -->
-  <script src="https://cdn.plot.ly/plotly-3.1.0.min.js" charset="utf-8"></script>
-  <!-- ArcGIS JS -->
-  <script type="module" src="https://js.arcgis.com/calcite-components/3.2.1/calcite.esm.js"></script>
-  <link rel="stylesheet" href="https://js.arcgis.com/4.33/esri/themes/light/main.css"/>
-  <script src="https://js.arcgis.com/4.33/"></script>
-  <script type="module" src="https://js.arcgis.com/4.33/map-components/"></script>
-  <!-- Locale (must load before app module) -->
-  <script type="application/javascript" src="/src/json/locales/es.json"></script>
-  <!-- App (Vite entry point) -->
-  <script type="module" src="/src/main.js"></script>
+  <!-- Vite entry point -->
+  <script type="module" src="/src/main.js" defer></script>
 </head>
 
 <body>
@@ -331,21 +322,24 @@
   </div>
 
   <arcgis-map item-id="a69f14ea2e784e019f4a4b6835ffd376">
-    <arcgis-zoom position="top-left"></arcgis-zoom>
-    <arcgis-locate position="top-left" scale="5000"></arcgis-locate>
+    <arcgis-zoom slot="top-left"></arcgis-zoom>
+    <arcgis-locate slot="top-left" scale="5000"></arcgis-locate>
+    <calcite-action id="filter-button" scale="s" icon="filter" appearance="solid" slot="top-left" title="Filtrar Ríos"></calcite-action>
+    <calcite-action id="forecast-time-slider" scale="s" icon="clock" appearance="solid" slot="top-left" title="Pasos de Tiempo del Pronóstico"></calcite-action>
+    <calcite-action id="hydrosos-time-slider" scale="s" appearance="solid" slot="top-left" title="HydroSOS Indicadores de Estado Mensuales"><span>SOS</span></calcite-action>
 
-    <arcgis-expand close-on-esc position="top-right" title="Layer List">
+    <arcgis-expand slot="top-right" title="Layer List">
       <arcgis-layer-list class="large-icon"></arcgis-layer-list>
     </arcgis-expand>
-    <arcgis-expand close-on-esc position="top-right" title="Basemap Gallery">
+    <arcgis-expand slot="top-right" title="Basemap Gallery">
       <arcgis-basemap-gallery></arcgis-basemap-gallery>
     </arcgis-expand>
 
-    <arcgis-expand close-on-esc position="bottom-left" mode="floating" data-tooltip="Legend">
+    <arcgis-expand slot="bottom-left" title="Legend">
       <arcgis-legend legend-style="classic"></arcgis-legend>
     </arcgis-expand>
 
-    <arcgis-scale-bar position="bottom-right" bar-style="line" unit="dual"></arcgis-scale-bar>
+    <arcgis-scale-bar slot="bottom-right" bar-style="line" unit="dual"></arcgis-scale-bar>
   </arcgis-map>
 
   <div id="timeSliderForecastWrapper" data-category="map" class="time-sliders">
