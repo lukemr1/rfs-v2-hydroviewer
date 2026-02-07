@@ -9,6 +9,7 @@ import {bookmarks} from "./bookmarks.js";
 import {LoadStatus, RiverId, UseBiasCorrected, UseShowExtraRetroGraphs, UseSimpleForecast} from "./states/state.js";
 import {plotAllForecast, plotAllRetro} from "./plots.js";
 import "./map.js"
+import "./reports.js"
 
 //////////////////////////////////////////////////////////////////////// INITIAL LOAD
 M.AutoInit();
