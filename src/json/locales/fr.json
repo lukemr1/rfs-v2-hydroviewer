@@ -2,6 +2,7 @@
   "words": {
     "riverid": "ID de Rivière",
     "forecast": "Prévision",
+    "forecastOriginal": "Prévision (Non Corrigée)",
     "retro": "Historique",
     "returnPeriods": "Périodes de Retour",
     "month": "Mois",
@@ -70,7 +71,7 @@
     "retroXaxis": "Date",
     "retroYaxis": "Débit",
     "fcTitle": "Prévision pour : ",
-    "retroTitle": "Débit Historique pour",
+    "retroTitle": "Débit Historique pour : ",
     "volumeTitle": "Volume Annuel Accumulé de Débit pour la Rivière : ",
     "cumVolumeTitle": "Volume de Débit Quotidien Accumulé pour la Rivière : ",
     "statusTitle": "État Annuel par Mois pour la Rivière : ",
@@ -79,6 +80,7 @@
     "peaksTitle": "Date du débit maximal annuel pour la Rivière : ",
     "peaksXaxis": "Mois",
     "heatMapTitle": "Débit moyen de la rivière pour : ",
-    "heatMapXaxis": "Mois"
+    "heatMapXaxis": "Mois",
+    "cumVolumeYaxis": "Volume Cumulé (millions m³)"
   }
 }

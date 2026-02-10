@@ -2,6 +2,7 @@
   "words": {
     "riverid": "ID del Río",
     "forecast": "Pronóstico",
+    "forecastOriginal": "Pronóstico (No Corregido)",
     "retro": "Histórico",
     "returnPeriods": "Períodos de Retorno",
     "month": "Mes",
@@ -70,7 +71,7 @@
     "retroXaxis": "Fecha",
     "retroYaxis": "Caudal",
     "fcTitle": "Pronóstico para: ",
-    "retroTitle": "Caudal Histórico para",
+    "retroTitle": "Caudal Histórico para: ",
     "volumeTitle": "Volumen anual acumulado de caudal para río: ",
     "cumVolumeTitle": "Volumen de caudal diario acumulado del río: ",
     "statusTitle": "Estado anual por Mes para Río: ",
@@ -79,6 +80,7 @@
     "peaksTitle": "Fecha de caudal máximo anual del río: ",
     "peaksXaxis": "Mes",
     "heatMapTitle": "Caudal río promedio para el río: ",
-    "heatMapXaxis": "Mes"
+    "heatMapXaxis": "Mes",
+    "cumVolumeYaxis": "Volumen Acumulado (millones m³)"
   }
 }
