@@ -1,6 +1,7 @@
 import namedDefaultRivers from "./json/namedDefaultRivers.json" with {type: "json"}
 import {RiverId} from "./states/state.js";
 import {validateRiverNumber} from "./data/main.js";
+import {text} from "./intl.js";
 
 const key = 'riverBookmarks'
 
@@ -81,29 +82,28 @@ export const bookmarks = (() => {
   const submitForm = async () => {
     const id = newRiverIdInput.value.trim()
     const name = newRiverNameInput.value.trim()
-    // todo translate these error messages
     if (!/^\d{9}$/.test(id)) {
-      M.toast({html: 'Please enter a 9-digit River ID.', classes: 'orange', displayLength: 6000})
+      M.toast({html: text.ui.bookmarkInvalidId, classes: 'orange', displayLength: 6000})
       return
     }
     if (bookmarks.find(r => r.id === +id)) {
-      M.toast({html: 'This River ID is already bookmarked.', classes: 'orange', displayLength: 6000})
+      M.toast({html: text.ui.bookmarkDuplicate, classes: 'orange', displayLength: 6000})
       return
     }
     if (name.length === 0) {
-      M.toast({html: 'Please enter a name for the bookmark.', classes: 'orange', displayLength: 6000})
+      M.toast({html: text.ui.bookmarkEnterName, classes: 'orange', displayLength: 6000})
       return
     }
     const addedRiver = await add({id: +id, name: name, validate: true})
     if (!addedRiver){
-      M.toast({html: 'This River ID was not found in the RFS datasets. Verify the number and try again.', classes: 'red', displayLength: 6000})
+      M.toast({html: text.ui.bookmarkNotFound, classes: 'red', displayLength: 6000})
       return
     }
     cache()
     newRiverIdInput.value = ''
     newRiverNameInput.value = ''
     M.Modal.getInstance(addModalDiv).close()
-    M.toast({html: 'River Bookmarked!', classes: 'green', displayLength: 2000})
+    M.toast({html: text.ui.bookmarkAdded, classes: 'green', displayLength: 2000})
   }
   const isBookmarked = riverid => bookmarks.some(r => r.id === riverid)
 
@@ -122,9 +122,9 @@ export const bookmarks = (() => {
   submitNewBookmark.onclick = submitForm
   deleteAllBookmarksButtons.forEach(btn => {
     btn.onclick = () => {
-      if (confirm('Are you sure you want to delete all bookmarks?')) {
+      if (confirm(text.ui.confirmDeleteBookmarks)) {
         clear()
-        alert('All bookmarks deleted!')
+        alert(text.ui.bookmarksDeleted)
         table()
         setFavoriteIcon()
       }
