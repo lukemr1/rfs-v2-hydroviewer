@@ -72,6 +72,7 @@ UseShowExtraRetroGraphs.addSubscriber(() => fetchData({display: false}))
 
 // Language change subscribers
 Lang.addSubscriber(() => fetchData({display: false}))
+Lang.addSubscriber(() => displayRiverNumber(RiverId.get()))  // the language change sets the default prompt for "select a river" so we need to reapply the number if selected
 
 // event listeners
 const forecastDatePicker = document.getElementById('forecast-date-calendar')
