@@ -3,10 +3,10 @@ import "./css/materialize.overrides.css"
 import "./css/report.print.css"
 
 import {clearCharts, displayLoadingStatus, displayRiverNumber, divModalCharts, inputForecastDate, riverIdInput, updateDownloadLinks} from "./ui.js";
-import {lang, text} from "./intl.js";
+import {translationDictionary} from "./intl.js";
 import {getAndCacheForecast, getAndCacheRetrospective, getAndCacheReturnPeriods} from "./data/main.js";
 import {bookmarks} from "./bookmarks.js";
-import {LoadStatus, RiverId, UseBiasCorrected, UseShowExtraRetroGraphs, UseSimpleForecast} from "./states/state.js";
+import {Lang, LoadStatus, RiverId, UseBiasCorrected, UseShowExtraRetroGraphs, UseSimpleForecast} from "./states/state.js";
 import {plotAllForecast, plotAllRetro} from "./plots.js";
 import "./map.js"
 import "./reports.js"
@@ -18,7 +18,7 @@ M.Dropdown.init(document.querySelectorAll('.dropdown-trigger'), {
   alignment: 'right',
   constrainWidth: false
 });
-if (window.innerWidth < 800) M.toast({html: text.prompts.mobile, classes: "blue custom-toast-placement", displayLength: 7500})
+if (window.innerWidth < 800) M.toast({html: translationDictionary.prompts.mobile, classes: "blue custom-toast-placement", displayLength: 7500})
 
 const fetchData = ({riverId, display = true} = {}) => {
   if (display) M.Modal.getInstance(divModalCharts).open()
@@ -70,6 +70,9 @@ UseSimpleForecast.addSubscriber(() => fetchData({display: false}))
 UseBiasCorrected.addSubscriber(() => fetchData({display: false}))
 UseShowExtraRetroGraphs.addSubscriber(() => fetchData({display: false}))
 
+// Language change subscribers
+Lang.addSubscriber(() => fetchData({display: false}))
+
 // event listeners
 const forecastDatePicker = document.getElementById('forecast-date-calendar')
 const reportDatePicker = document.getElementById('report-date-calendar')
@@ -110,7 +113,7 @@ nextDateArrow.onclick = () => {
 window.setRiverIdFromInput = riverid => {
   let possibleId = riverid || riverIdInput.value
   if (/^\d{9}$/.test(possibleId)) RiverId.set(parseInt(possibleId))
-  else alert(text.prompts.invalidRiverID)
+  else alert(translationDictionary.prompts.invalidRiverID)
   M.Modal.getInstance(document.getElementById('enter-river-id-modal')).close()
 }
 riverIdInput.addEventListener("keydown", event => {

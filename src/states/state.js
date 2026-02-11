@@ -23,6 +23,9 @@ const UseShowExtraRetroGraphs = pubSubState({
   initialValue: true,
   localStorageKey: 'showExtraRetroGraphs',
 })
+const Lang = pubSubState({
+  initialValue: localStorage.getItem('lang') || 'en',
+})
 
 // set event listeners and sync state with localStorage values on first load
 const checkSimpleForecast = document.getElementById('settingsShowSimpleForecast')
@@ -50,5 +53,5 @@ document.getElementById('confirm-use-bias-correction').addEventListener('click',
 })
 
 export {
-  RiverId, LoadStatus, UseBiasCorrected, UseSimpleForecast, UseShowExtraRetroGraphs
+  Lang, RiverId, LoadStatus, UseBiasCorrected, UseSimpleForecast, UseShowExtraRetroGraphs
 }

@@ -3,7 +3,8 @@ import {forecastProbabilityTable, plotForecast} from "./plots.js";
 import {loadingImageTag} from "./ui.js";
 import DataFetcherWorker from './workers/dataFetcher.js?worker';
 import Plotly from "plotly.js/lib/core";
-import {text, lang} from "./intl.js";
+import {translationDictionary} from "./intl.js";
+import {Lang} from "./states/state.js";
 
 const maxWorkers = 3;
 const workers = Array.from({length: maxWorkers}, () => new DataFetcherWorker());
@@ -62,7 +63,7 @@ generateReportButton.addEventListener('click', async () => {
     await plotReportData(data)
   } catch (error) {
     console.error('Error generating report:', error);
-    alert(text.ui.reportError);
+    alert(translationDictionary.ui.reportError);
   } finally {
     generateReportButton.innerText = generateReportButton.innerText.split(loadingImageTag).join('');
   }
@@ -146,7 +147,7 @@ ${forecastProbabilityTable({forecast: riverData.forecast, rp: riverData.returnPe
   const printDocument = reportIframe.contentDocument || reportIframe.contentWindow.document;
   printDocument.open();
   printDocument.write(`
-<html lang="${lang}">
+<html lang="${Lang.get()}">
 <head>
   <title>River Forecast Report</title>
   <link rel="stylesheet" type="text/css" href="/src/css/report.print.css">

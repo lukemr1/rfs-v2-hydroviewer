@@ -3,11 +3,11 @@ import scatter from 'plotly.js/lib/scatter';
 import heatmap from 'plotly.js/lib/heatmap';
 
 import {divChartFdc, divChartForecast, divChartRetro, divChartStatus, divChartYearlyVol, divCumulativeVolume, divRasterHydrograph, divTableForecast, divYearlyPeaks} from './ui.js'
-import {UseShowExtraRetroGraphs} from "./states/state.js";
-import {lang, text} from "./intl.js";
+import {Lang, UseShowExtraRetroGraphs} from "./states/state.js";
+import {translationDictionary} from "./intl.js";
 
 Plotly.register([scatter, heatmap]);
-Plotly.setPlotConfig({'locale': lang})
+Plotly.setPlotConfig({'locale': Lang.get()})
 
 //////////////////////////////////////////////////////////////////////// Constants and configs
 const defaultDateRange = ['2015-01-01', new Date().toISOString().split("T")[0]]
@@ -31,11 +31,16 @@ const returnPeriodColors = {
   '100': 'rgb(128, 0, 246)',
 }
 const months = Array.from({length: 12}).map((_, idx) => (idx + 1).toString().padStart(2, '0'))
-const monthNames = months.map(m => new Date(2021, parseInt(m, 10) - 1, 1).toLocaleString(lang, {month: 'short'}))
+let monthNames = months.map(m => new Date(2021, parseInt(m, 10) - 1, 1).toLocaleString(Lang.get(), {month: 'short'}))
 
-const experimentalPlotWatermark = [
+Lang.addSubscriber(newLang => {
+  monthNames = months.map(m => new Date(2021, parseInt(m, 10) - 1, 1).toLocaleString(newLang, {month: 'short'}))
+  Plotly.setPlotConfig({'locale': newLang})
+})
+
+const experimentalPlotWatermark = () => [
   {
-    text: text.plots.experimentalOverlay,
+    text: translationDictionary.plots.experimentalOverlay,
     xref: "paper",
     yref: "paper",
     x: 0.5,
@@ -63,7 +68,7 @@ const returnPeriodShapes = ({rp, x0, x1, maxFlow}) => {
       mode: 'lines',
       opacity: 0.5,
       legendgroup: 'returnperiods',
-      legendgrouptitle: {text: `${text.words.returnPeriods}`},
+      legendgrouptitle: {text: `${translationDictionary.words.returnPeriods}`},
       showlegend: true,
       visible: visible,
       name: `${name}: ${rp[name].toFixed(2)} m³/s`,
@@ -76,7 +81,7 @@ const returnPeriodShapes = ({rp, x0, x1, maxFlow}) => {
       const y1 = index === array.length - 1 ? Math.max(rp[key] * 1.15, maxFlow * 1.15) : rp[array[index + 1]]
       return box(y0, y1, key)
     })
-    .concat([{legendgroup: 'returnperiods', legendgrouptitle: {text: `${text.words.returnPeriods} m³/s`}}])
+    .concat([{legendgroup: 'returnperiods', legendgrouptitle: {text: `${translationDictionary.words.returnPeriods} m³/s`}}])
 }
 const plotForecast = ({forecast, rp, riverId, chartDiv}) => {
   chartDiv.innerHTML = ""
@@ -88,7 +93,7 @@ const plotForecast = ({forecast, rp, riverId, chartDiv}) => {
       {
         x: forecast.datetime.concat(forecast.datetime.slice().toReversed()),
         y: forecast.stats.p20.concat(forecast.stats.p80.slice().toReversed()),
-        name: `${text.plots.fcLineUncertainty}`,
+        name: `${translationDictionary.plots.fcLineUncertainty}`,
         fill: 'toself',
         fillcolor: 'rgba(44,182,255,0.6)',
         line: {color: 'rgba(0,0,0,0)'},
@@ -114,14 +119,14 @@ const plotForecast = ({forecast, rp, riverId, chartDiv}) => {
         x: forecast.datetime,
         y: forecast.stats.median,
         line: {color: 'black'},
-        name: text.plots.fcLineMedian,
+        name: translationDictionary.plots.fcLineMedian,
         legendgroup: 'forecast',
       },
       ...(forecast.stats_original ? [
         {
           x: forecast.datetime.concat(forecast.datetime.slice().toReversed()),
           y: forecast.stats_original.p20.concat(forecast.stats_original.p80.slice().toReversed()),
-          name: text.plots.fcLineUncertaintyOriginal,
+          name: translationDictionary.plots.fcLineUncertaintyOriginal,
           fill: 'toself',
           fillcolor: 'rgba(227,212,9,0.8)',
           line: {color: 'rgba(0,0,0,0)'},
@@ -149,7 +154,7 @@ const plotForecast = ({forecast, rp, riverId, chartDiv}) => {
         {
           x: forecast.datetime,
           y: forecast.stats_original.median,
-          name: text.plots.fcLineMedianOriginal,
+          name: translationDictionary.plots.fcLineMedianOriginal,
           line: {color: 'blue'},
           visible: 'legendonly',
           legendgroup: 'forecastOriginal',
@@ -158,11 +163,11 @@ const plotForecast = ({forecast, rp, riverId, chartDiv}) => {
       ...returnPeriods,
     ],
     {
-      title: {text: `${text.plots.fcTitle}${riverId}`},
-      annotations: forecast.stats_original ? experimentalPlotWatermark : [],
-      xaxis: {title: {text: `${text.plots.fcXaxis} (UTC +00:00)`}},
+      title: {text: `${translationDictionary.plots.fcTitle}${riverId}`},
+      annotations: forecast.stats_original ? experimentalPlotWatermark() : [],
+      xaxis: {title: {text: `${translationDictionary.plots.fcXaxis} (UTC +00:00)`}},
       yaxis: {
-        title: {text: `${text.plots.fcYaxis} (m³/s)`},
+        title: {text: `${translationDictionary.plots.fcYaxis} (m³/s)`},
         range: [0, null]
       },
     }
@@ -176,7 +181,7 @@ const plotForecastMembers = ({forecast, rp, riverId, chartDiv}) => {
       return {
         x: forecast.datetime,
         y: memberArray,
-        name: text.words.ensMembers,
+        name: translationDictionary.words.ensMembers,
         showlegend: memberNumber === 1,
         type: 'scatter',
         mode: 'lines',
@@ -189,7 +194,7 @@ const plotForecastMembers = ({forecast, rp, riverId, chartDiv}) => {
     return {
       x: forecast.datetime,
       y: memberArray,
-      name: text.words.ensMembersOriginal,
+      name: translationDictionary.words.ensMembersOriginal,
       showlegend: memberNumber === 1,
       type: 'scatter',
       mode: 'lines',
@@ -202,11 +207,11 @@ const plotForecastMembers = ({forecast, rp, riverId, chartDiv}) => {
     chartDiv,
     [...memberTraces, ...originalTraces, ...returnPeriods,],
     {
-      title: {text: `${text.plots.fcMembersTitle}${riverId}`},
-      annotations: forecast.discharge_original ? experimentalPlotWatermark : [],
-      xaxis: {title: {text: `${text.plots.fcXaxis} (UTC +00:00)`}},
+      title: {text: `${translationDictionary.plots.fcMembersTitle}${riverId}`},
+      annotations: forecast.discharge_original ? experimentalPlotWatermark() : [],
+      xaxis: {title: {text: `${translationDictionary.plots.fcXaxis} (UTC +00:00)`}},
       yaxis: {
-        title: {text: `${text.plots.fcYaxis} (m³/s)`},
+        title: {text: `${translationDictionary.plots.fcYaxis} (m³/s)`},
         range: [0, null]
       },
       legend: {'orientation': 'h'},
@@ -250,14 +255,14 @@ const forecastProbabilityTable = ({forecast, rp}) => {
   const dailyDateStrings = forecast
     .datetime
     .filter((_, index) => index % stepsPerDay === 0)
-    .map(date => new Date(date).toLocaleDateString(lang, {
+    .map(date => new Date(date).toLocaleDateString(Lang.get(), {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       timeZone: 'UTC'
     }))
 
-  const headerRow = `<tr><th>${text.words.returnPeriods}</th>${dailyDateStrings.map(date => `<th>${date}</th>`).join('')}</tr>`
+  const headerRow = `<tr><th>${translationDictionary.words.returnPeriods}</th>${dailyDateStrings.map(date => `<th>${date}</th>`).join('')}</tr>`
 
   const returnPeriods = ['2', '5', '10', '25', '50', '100']
   const bodyRows = returnPeriods.map(rpKey => {
@@ -281,13 +286,13 @@ const plotRetrospective = ({daily, monthly, riverId, chartDiv, biasCorrected}) =
         x: daily.datetime,
         y: daily.discharge,
         type: 'lines',
-        name: `${text.words.dailyAverage}`,
+        name: `${translationDictionary.words.dailyAverage}`,
       },
       {
         x: Object.keys(monthly),
         y: Object.values(monthly),
         type: 'lines',
-        name: `${text.words.monthlyAverage}`,
+        name: `${translationDictionary.words.monthlyAverage}`,
         line: {color: 'rgb(0, 166, 255)'},
         visible: 'legendonly'
       },
@@ -295,22 +300,22 @@ const plotRetrospective = ({daily, monthly, riverId, chartDiv, biasCorrected}) =
         x: daily.datetime,
         y: daily.discharge_original,
         type: 'lines',
-        name: `${text.words.dailyAverageOriginal}`,
+        name: `${translationDictionary.words.dailyAverageOriginal}`,
         line: {color: 'rgb(255, 0, 0)'},
         visible: 'legendonly'
       }] : [])
     ],
     {
-      title: {text: `${text.plots.retroTitle} ${riverId}`},
-      annotations: biasCorrected ? experimentalPlotWatermark : [],
+      title: {text: `${translationDictionary.plots.retroTitle} ${riverId}`},
+      annotations: biasCorrected ? experimentalPlotWatermark() : [],
       legend: {orientation: 'h', x: 0, y: 1},
       hovermode: 'x',
       yaxis: {
-        title: {text: `${text.plots.retroYaxis} (m³/s)`},
+        title: {text: `${translationDictionary.plots.retroYaxis} (m³/s)`},
         range: [0, null]
       },
       xaxis: {
-        title: {text: `${text.plots.retroXaxis} (UTC +00:00)`},
+        title: {text: `${translationDictionary.plots.retroXaxis} (UTC +00:00)`},
         type: 'date',
         autorange: false,
         range: defaultDateRange,
@@ -319,30 +324,30 @@ const plotRetrospective = ({daily, monthly, riverId, chartDiv, biasCorrected}) =
           buttons: [
             {
               count: 1,
-              label: `1 ${text.words.year}`,
+              label: `1 ${translationDictionary.words.year}`,
               step: 'year',
               stepmode: 'backward'
             },
             {
               count: 5,
-              label: `5 ${text.words.years}`,
+              label: `5 ${translationDictionary.words.years}`,
               step: 'year',
               stepmode: 'backward'
             },
             {
               count: 10,
-              label: `10 ${text.words.years}`,
+              label: `10 ${translationDictionary.words.years}`,
               step: 'year',
               stepmode: 'backward'
             },
             {
               count: 30,
-              label: `30 ${text.words.years}`,
+              label: `30 ${translationDictionary.words.years}`,
               step: 'year',
               stepmode: 'backward'
             },
             {
-              label: `${text.words.all}`,
+              label: `${translationDictionary.words.all}`,
               count: daily.datetime.length,
               step: 'day',
             }
@@ -361,7 +366,7 @@ const plotYearlyVolumes = ({yearly, averages, riverId, chartDiv, biasCorrected})
         x: yearly.map(x => x.year),
         y: yearly.map(y => y.value),
         type: 'line',
-        name: `${text.words.annualVolume}`,
+        name: `${translationDictionary.words.annualVolume}`,
         marker: {color: 'rgb(0, 166, 255)'}
       },
       ...averages?.map((x, idx) => {
@@ -370,21 +375,21 @@ const plotYearlyVolumes = ({yearly, averages, riverId, chartDiv, biasCorrected})
           y: [x.average, x.average],
           type: 'scatter',
           mode: 'lines',
-          legendgroup: `${text.words.fiveYearAverage}`,
+          legendgroup: `${translationDictionary.words.fiveYearAverage}`,
           showlegend: idx === 0,
-          name: `${text.words.fiveYearAverage}`,
+          name: `${translationDictionary.words.fiveYearAverage}`,
           marker: {color: 'red'},
         }
       }) || []
     ],
     {
-      title: {text: `${text.plots.volumeTitle}${riverId}`},
-      annotations: biasCorrected ? experimentalPlotWatermark : [],
+      title: {text: `${translationDictionary.plots.volumeTitle}${riverId}`},
+      annotations: biasCorrected ? experimentalPlotWatermark() : [],
       legend: {orientation: 'h'},
       hovermode: 'x',
-      xaxis: {title: {text: `${text.words.year}`}},
+      xaxis: {title: {text: `${translationDictionary.words.year}`}},
       yaxis: {
-        title: {text: `${text.words.millionMetersCubed} (m³ * 10^6)`},
+        title: {text: `${translationDictionary.words.millionMetersCubed} (m³ * 10^6)`},
         range: [0, null]
       }
     }
@@ -399,9 +404,9 @@ const plotStatuses = ({statuses, monthlyAverages, monthlyAverageTimeseries, rive
     [
       // shaded regions for thresholds based on percentiles
       ...statusColors.map((color, idx) => {
-        const label = text.statusLabels[idx]
-        const nextLabel = text.statusLabels[idx + 1]
-        const lastEntry = idx === text.statusLabels.length - 1
+        const label = translationDictionary.statusLabels[idx]
+        const nextLabel = translationDictionary.statusLabels[idx + 1]
+        const lastEntry = idx === translationDictionary.statusLabels.length - 1
         return {
           x: months.concat(...months.toReversed()),
           y: statuses[label].concat(lastEntry ? Array.from({length: 12}).fill(0) : statuses[nextLabel].toReversed()),
@@ -411,7 +416,7 @@ const plotStatuses = ({statuses, monthlyAverages, monthlyAverageTimeseries, rive
           line: {width: 0},
           fillcolor: color,
           visible: 'legendonly',
-          legendgrouptitle: {text: `${text.words.monthlyStatusCategories}`},
+          legendgrouptitle: {text: `${translationDictionary.words.monthlyStatusCategories}`},
         }
       }),
       // long term or total monthly average
@@ -419,7 +424,7 @@ const plotStatuses = ({statuses, monthlyAverages, monthlyAverageTimeseries, rive
         x: monthlyAverages.map(x => x.month),
         y: monthlyAverages.map(y => y.value),
         mode: 'lines',
-        name: `${text.words.monthlyAverageFlows}`,
+        name: `${translationDictionary.words.monthlyAverageFlows}`,
         visible: true,
         line: {color: 'rgb(0,157,255)', width: 3, dash: 'dash'},
       },
@@ -433,7 +438,7 @@ const plotStatuses = ({statuses, monthlyAverages, monthlyAverageTimeseries, rive
         return {
           x: months,
           y: values,
-          name: `${text.words.year} ${year}`,
+          name: `${translationDictionary.words.year} ${year}`,
           visible: idx === 0 ? true : 'legendonly',
           mode: 'lines',
           line: {width: 2, color: 'black'}
@@ -441,16 +446,16 @@ const plotStatuses = ({statuses, monthlyAverages, monthlyAverageTimeseries, rive
       })
     ],
     {
-      title: {text: `${text.plots.statusTitle}${riverId}`},
-      annotations: biasCorrected ? experimentalPlotWatermark : [],
+      title: {text: `${translationDictionary.plots.statusTitle}${riverId}`},
+      annotations: biasCorrected ? experimentalPlotWatermark() : [],
       xaxis: {
-        title: {text: `${text.words.month}`},
+        title: {text: `${translationDictionary.words.month}`},
         tickvals: months,
         ticktext: monthNames,
       },
       hovermode: 'x',
       yaxis: {
-        title: {text: `${text.words.flow} (m³/s)`},
+        title: {text: `${translationDictionary.words.flow} (m³/s)`},
         range: [0, null]
       },
     }
@@ -465,7 +470,7 @@ const plotFdc = ({fdc, monthlyFdc, riverId, chartDiv, biasCorrected}) => {
         x: percentiles,
         y: fdc,
         type: 'lines',
-        name: `${text.words.flowDurationCurve}`,
+        name: `${translationDictionary.words.flowDurationCurve}`,
       },
       ...Object
         .keys(monthlyFdc)
@@ -475,17 +480,17 @@ const plotFdc = ({fdc, monthlyFdc, riverId, chartDiv, biasCorrected}) => {
             x: percentiles,
             y: monthlyFdc[m],
             type: 'line',
-            name: `${text.words.fdc} ${monthNames[idx]}`,
+            name: `${translationDictionary.words.fdc} ${monthNames[idx]}`,
             visible: 'legendonly',
           }
         })
     ],
     {
-      title: {text: `${text.plots.fdcTitle}${riverId}`},
-      annotations: biasCorrected ? experimentalPlotWatermark : [],
-      xaxis: {title: {text: `${text.words.percentile} (%)`}},
+      title: {text: `${translationDictionary.plots.fdcTitle}${riverId}`},
+      annotations: biasCorrected ? experimentalPlotWatermark() : [],
+      xaxis: {title: {text: `${translationDictionary.words.percentile} (%)`}},
       yaxis: {
-        title: {text: `${text.words.flow} (m³/s)`},
+        title: {text: `${translationDictionary.words.flow} (m³/s)`},
         range: [0, null]
       },
       legend: {orientation: 'h'},
@@ -563,10 +568,10 @@ const plotYearlyPeaks = ({yearlyPeaks, riverId, chartDiv, biasCorrected}) => {
         type: "scatter",
         marker: {size: 9, color: viridis[i], line: {width: 0}},
         text: allPoints.map(
-          p => `${text.words.year}: ${p.year}<br>${text.words.date}: ${p.date.toLocaleDateString(undefined, {
+          p => `${translationDictionary.words.year}: ${p.year}<br>${translationDictionary.words.date}: ${p.date.toLocaleDateString(undefined, {
             "month": "short",
             "day": "numeric"
-          })}<br>${text.words.discharge}: ${formatVal(p.peak)} m³/s`
+          })}<br>${translationDictionary.words.discharge}: ${formatVal(p.peak)} m³/s`
         ),
         hoverinfo: "text",
         showlegend: true,
@@ -589,7 +594,7 @@ const plotYearlyPeaks = ({yearlyPeaks, riverId, chartDiv, biasCorrected}) => {
 
   // --- legend symbol for red outlier rings ---
   traces.push({
-    name: `${text.words.temporalOutliers}`,
+    name: `${translationDictionary.words.temporalOutliers}`,
     x: [null],
     y: [null],
     mode: "markers",
@@ -608,16 +613,16 @@ const plotYearlyPeaks = ({yearlyPeaks, riverId, chartDiv, biasCorrected}) => {
     mode: "lines",
     line: {dash: "dash", width: 1, color: "black"},
     hoverinfo: "none",
-    name: `${text.words.medianDOY}`,
+    name: `${translationDictionary.words.medianDOY}`,
     showlegend: true,
   });
 
   const monthStarts = monthNames.map((_, i) => Math.floor((Date.UTC(2023, i, 1) - Date.UTC(2023, 0, 0)) / 86400000) + 1);
 
   const layout = {
-    title: {text: `${text.plots.peaksTitle}${riverId}`, x: 0.5},
+    title: {text: `${translationDictionary.plots.peaksTitle}${riverId}`, x: 0.5},
     xaxis: {
-      title: {text: text.plots.peaksXaxis},
+      title: {text: translationDictionary.plots.peaksXaxis},
       tickmode: "array",
       tickvals: monthStarts,
       ticktext: monthNames,
@@ -626,18 +631,18 @@ const plotYearlyPeaks = ({yearlyPeaks, riverId, chartDiv, biasCorrected}) => {
       fixedrange: true,
     },
     yaxis: {
-      title: {text: text.words.year},
+      title: {text: translationDictionary.words.year},
       autorange: false,
       range: [minYear - 1, maxYear + 1],
       fixedrange: true,
     },
-    annotations: biasCorrected ? experimentalPlotWatermark : [],
+    annotations: biasCorrected ? experimentalPlotWatermark() : [],
     legend: {
       x: 1.05,
       y: 1,
       bgcolor: "rgba(255,255,255,0)",
       bordercolor: "rgba(0,0,0,0)",
-      title: {text: `${text.words.peakDischarge} (m³/s)`},
+      title: {text: `${translationDictionary.words.peakDischarge} (m³/s)`},
     },
   };
 
@@ -674,7 +679,7 @@ const plotRasterHydrograph = ({retro, riverId, chartDiv}) => {
   // get a list of all 366 possible days in month-day format then for each year, create a label list
   const allDays = Array.from({length: 366}, (_, i) => {
     const d = new Date(Date.UTC(2023, 0, i + 1));
-    return `${d.toLocaleString(lang, {month: "short", timeZone: "UTC"})} ${d.getUTCDate()}`;
+    return `${d.toLocaleString(Lang.get(), {month: "short", timeZone: "UTC"})} ${d.getUTCDate()}`;
   });
   const hoverLabelData = yYears.map(year => {
     return allDays.map(date => {
@@ -724,17 +729,17 @@ const plotRasterHydrograph = ({retro, riverId, chartDiv}) => {
     zmin: vmin,
     zmax: vmax,
     customdata: hoverLabelData,
-    hovertemplate: `${text.words.year}: %{y}<br>${text.words.date}: %{customdata.date}<br>${text.words.discharge}: %{z} m³/s<extra></extra>`,
+    hovertemplate: `${translationDictionary.words.year}: %{y}<br>${translationDictionary.words.date}: %{customdata.date}<br>${translationDictionary.words.discharge}: %{z} m³/s<extra></extra>`,
     colorbar: {
-      title: {text: `${text.words.discharge} (m³/s)`, side: "top"},
+      title: {text: `${translationDictionary.words.discharge} (m³/s)`, side: "top"},
       tickvals: binMid,
       ticktext: binMid.map((v, i) => `${formatVal(binEdges[i])}–${formatVal(binEdges[i + 1])}`)
     },
     hoverinfo: "skip"
   }], {
-    title: {text: `${text.plots.heatMapTitle}${riverId}`, x: 0.5},
-    xaxis: {title: text.plots.heatMapXaxis, side: "bottom", fixedrange: true, tickvals: [1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335], ticktext: monthNames},
-    yaxis: {title: text.words.year, fixedrange: true},
+    title: {text: `${translationDictionary.plots.heatMapTitle}${riverId}`, x: 0.5},
+    xaxis: {title: translationDictionary.plots.heatMapXaxis, side: "bottom", fixedrange: true, tickvals: [1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335], ticktext: monthNames},
+    yaxis: {title: translationDictionary.words.year, fixedrange: true},
     margin: {t: 80, l: 80, r: 80, b: 70},
   });
 };
@@ -774,20 +779,20 @@ const plotCumulativeVolumes = ({retro, riverId, chartDiv}) => {
       let zorder = 0
       if (+year === wettestYear) {
         lineStyle = {color: "blue", width: 2}
-        hovertemplate = `${text.words.year}: ${year} (${text.words.wettestYear})`
-        name = `${text.words.wettestYear}: ${year}`
+        hovertemplate = `${translationDictionary.words.year}: ${year} (${translationDictionary.words.wettestYear})`
+        name = `${translationDictionary.words.wettestYear}: ${year}`
         showlegend = true
         zorder = 2
       } else if (+year === driestYear) {
         lineStyle = {color: "red", width: 2}
-        hovertemplate = `${text.words.year}: ${year} (${text.words.driestYear})`
-        name = `${text.words.driestYear}: ${year}`
+        hovertemplate = `${translationDictionary.words.year}: ${year} (${translationDictionary.words.driestYear})`
+        name = `${translationDictionary.words.driestYear}: ${year}`
         showlegend = true
         zorder = 2
       } else if (+year === medianYear) {
         lineStyle = {color: "green", width: 2}
-        hovertemplate = `${text.words.year}: ${year} (${text.words.medianYear})`
-        name = `${text.words.medianYear}: ${year}`
+        hovertemplate = `${translationDictionary.words.year}: ${year} (${translationDictionary.words.medianYear})`
+        name = `${translationDictionary.words.medianYear}: ${year}`
         showlegend = true
         zorder = 2
       }
@@ -805,14 +810,14 @@ const plotCumulativeVolumes = ({retro, riverId, chartDiv}) => {
     })
 
   const layout = {
-    title: {text: `${text.plots.cumVolumeTitle}${riverId}`},
+    title: {text: `${translationDictionary.plots.cumVolumeTitle}${riverId}`},
     xaxis: {
       type: "date",
-      title: {text: text.words.months},
+      title: {text: translationDictionary.words.months},
       tickformat: "%b %d",
     },
     yaxis: {
-      title: {text: text.plots.cumVolumeYaxis},
+      title: {text: translationDictionary.plots.cumVolumeYaxis},
     },
     legend: {
       x: 1.05,
@@ -842,7 +847,7 @@ const plotAllRetro = ({retro, riverId}) => {
   let monthlyFdc = {}
   let monthlyStatusValues = {}
   let yearlyPeaks = {}
-  text.statusLabels.forEach(label => monthlyStatusValues[label] = [])
+  translationDictionary.statusLabels.forEach(label => monthlyStatusValues[label] = [])
   const biasCorrected = retro.hasOwnProperty("discharge_original")
 
   // Get subsets of data with the same YYYY-MM timestamp

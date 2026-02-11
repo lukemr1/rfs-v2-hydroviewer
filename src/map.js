@@ -21,8 +21,7 @@ import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 import * as intl from "@arcgis/core/intl";
 
 import {buildFilterExpression, inputForecastDate, modalFilter, resetFilterForm, RFS_LAYER_URL, selectOutletCountry, selectRiverCountry, selectVPU, showChartView, updateHash,} from "./ui.js";
-import {lang} from "./intl.js";
-import {LoadStatus, RiverId} from "./states/state.js";
+import {Lang, LoadStatus, RiverId} from "./states/state.js";
 import riverCountries from "./json/riverCountries.json" with {type: "json"};
 import outletCountries from "./json/outletCountries.json" with {type: "json"};
 import vpuList from "./json/vpuList.json" with {type: "json"};
@@ -34,8 +33,6 @@ export const timeSliderStatusDiv = document.getElementById('timeSliderHydroSOSWr
 const filterButton = document.querySelector('calcite-action#filter-button')
 const timeSliderForecastButton = document.querySelector('calcite-action#forecast-time-slider')
 const timeSliderHydroSOSButton = document.querySelector('calcite-action#hydrosos-time-slider')
-const timeSliderForecast = document.querySelector('arcgis-time-slider#timeSliderForecast')
-const timeSliderHydroSOS = document.querySelector('arcgis-time-slider#timeSliderHydroSOS')
 
 export default function main() {
   ////////////////////////////////////////////////////////////////////////  Initial state and config
@@ -44,7 +41,7 @@ export default function main() {
   const initLat = !isNaN(parseFloat(hashParams.get('lat'))) ? parseFloat(hashParams.get('lat')) : 18
   const initZoom = !isNaN(parseFloat(hashParams.get('zoom'))) ? parseFloat(hashParams.get('zoom')) : 2.75
   let definitionExpression = hashParams.get('definition') || ""
-  intl.setLocale(lang)
+  intl.setLocale(Lang.get())
 
   const now = new Date()  // the default date is 12 hours before UTC now, typical lag for computing forecasts each day
   const firstHydroSOSDate = new Date(1990, 0, 1)  // July 2024
@@ -68,13 +65,13 @@ export default function main() {
         })
         .then(response => {
           if (!response.features.length) {
-            M.toast({html: text.prompts.tryRiverAgain, classes: "red", displayDuration: 5000})
+            M.toast({html: translationDictionary.prompts.tryRiverAgain, classes: "red", displayDuration: 5000})
             return reject()
           }
           if (response.features[0].attributes.comid === "Null" || !response.features[0].attributes.comid) {
             RiverId.reset()
             LoadStatus.reset()
-            M.toast({html: text.prompts.tryRiverAgain, classes: "red", displayDuration: 5000})
+            M.toast({html: translationDictionary.prompts.tryRiverAgain, classes: "red", displayDuration: 5000})
             console.error(error)
             return reject()
           }
@@ -213,7 +210,7 @@ export default function main() {
 
   view.on("click", event => {
     if (view.zoom < MIN_QUERY_ZOOM) return view.goTo({target: event.mapPoint, zoom: MIN_QUERY_ZOOM});
-    M.toast({html: text.prompts.findingRiver, classes: "orange"})
+    M.toast({html: translationDictionary.prompts.findingRiver, classes: "orange"})
     searchLayerByClickPromise(event)
       .then(response => {
         view.graphics.removeAll()
