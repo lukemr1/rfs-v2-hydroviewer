@@ -186,7 +186,8 @@ const plotReportData = async (data) => {
 <head>
   <title>River Forecast Report</title>
   <style>
-    /* BASIC RESET */
+    @page { size: letter; margin: 0; }
+    
     body { font-family: 'Arial', sans-serif; color: #333; margin: 0; padding: 0; }
     
     /* LAYOUT UTILS */
