@@ -3,7 +3,7 @@ import "./css/materialize.overrides.css"
 import "./css/report.print.css"
 
 import {clearCharts, displayLoadingStatus, displayRiverNumber, divModalCharts, inputForecastDate, riverIdInput, updateDownloadLinks} from "./ui.js";
-import {translationDictionary} from "./intl.js";
+import {translationDictionary, hydrateLanguageTags, loadLocale} from "./intl.js";
 import {getAndCacheForecast, getAndCacheRetrospective, getAndCacheReturnPeriods} from "./data/main.js";
 import {bookmarks} from "./bookmarks.js";
 import {Lang, LoadStatus, RiverId, UseBiasCorrected, UseShowExtraRetroGraphs, UseSimpleForecast} from "./states/state.js";
@@ -119,4 +119,15 @@ window.setRiverIdFromInput = riverid => {
 }
 riverIdInput.addEventListener("keydown", event => {
   if (event.key === "Enter") setRiverIdFromInput()
+})
+
+document.querySelectorAll('#language-select a[data-lang]').forEach(el => {
+  el.addEventListener('click', async e => {
+    e.preventDefault()
+    const newLang = el.dataset.lang
+    if (newLang === Lang.get()) return
+    await loadLocale(newLang)
+    hydrateLanguageTags()
+    Lang.set(newLang)  // subscribers fire after translationDictionary is already updated
+  })
 })

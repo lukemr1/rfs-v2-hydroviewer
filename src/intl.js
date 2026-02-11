@@ -41,12 +41,4 @@ const hydrateLanguageTags = () => {
   })
 }
 
-const setLang = async (newLang) => {
-  if (!locales[newLang] || newLang === Lang.get()) return
-  localStorage.setItem('lang', newLang)
-  await loadLocale(newLang)
-  hydrateLanguageTags()
-  Lang.set(newLang)
-}
-window.setLang = setLang
-export {translationDictionary, hydrateLanguageTags}
+export {translationDictionary, hydrateLanguageTags, loadLocale}

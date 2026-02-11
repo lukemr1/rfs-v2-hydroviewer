@@ -24,7 +24,8 @@ const UseShowExtraRetroGraphs = pubSubState({
   localStorageKey: 'showExtraRetroGraphs',
 })
 const Lang = pubSubState({
-  initialValue: localStorage.getItem('lang') || 'en',
+  initialValue: localStorage.getItem('lang') || (window.navigator.language || 'en').split('-')[0] || 'en',
+  localStorageKey: 'lang',
 })
 
 // set event listeners and sync state with localStorage values on first load
